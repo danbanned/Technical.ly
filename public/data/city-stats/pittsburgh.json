@@ -1,0 +1,53 @@
+{
+  "city": "Pittsburgh",
+  "state": "PA",
+  "lat": 40.4406,
+  "lon": -79.9959,
+  "updatedAt": "2026-05-01",
+
+  "researchSpending": 1600000000,
+  "universityCount": 3,
+  "universities": [
+    { "name": "Carnegie Mellon University", "lat": 40.4432, "lon": -79.9428, "rd_spending": 1050000000, "field": "Robotics & AI",    "patents": 285, "gradStudents": 5200 },
+    { "name": "University of Pittsburgh",   "lat": 40.4444, "lon": -79.9530, "rd_spending":  520000000, "field": "Medical/Health",   "patents":  94, "gradStudents": 4800 },
+    { "name": "Duquesne University",        "lat": 40.4378, "lon": -79.9956, "rd_spending":   30000000, "field": "Sciences",         "patents":   8, "gradStudents":  700 }
+  ],
+
+  "dealFlow": 210000000,
+  "dealCount": 41,
+  "dealFlowYoY": 8,
+  "topDealSector": "Autonomous Systems",
+  "deals": [
+    { "company": "RoboVault",    "amount": 22000000, "sector": "Autonomous Systems", "date": "2026-04-05", "investor_city": "San Francisco" },
+    { "company": "SteelAI",      "amount": 18000000, "sector": "Industrial AI",      "date": "2026-03-01", "investor_city": "New York" },
+    { "company": "RiverMed",     "amount":  9500000, "sector": "Medical Devices",    "date": "2026-02-10", "investor_city": "Boston" },
+    { "company": "GridPulse",    "amount": 12000000, "sector": "Energy Tech",        "date": "2025-12-14", "investor_city": "Chicago" },
+    { "company": "AirGround",    "amount":  7200000, "sector": "Autonomous Systems", "date": "2025-11-20", "investor_city": "San Francisco" }
+  ],
+
+  "mobilityScore": 47,
+  "mobilityRating": "Low",
+  "newBusinessFormationRate": 6.8,
+  "jobMobilityIndex": 43,
+  "migrationNet": -2400,
+  "minorityLedStartups": 3,
+  "minorityPopulation": 25,
+  "laborForceParticipation": 60.1,
+  "medianIncome": 45000,
+  "incomeGrowthYoY": 1.2,
+  "topResearchField": "Robotics & AI",
+
+  "ecosystemConnections": [
+    { "city": "Philadelphia",  "lat": 39.9526, "lon": -75.1652, "flowType": "talent",  "volume": 2200,     "direction": "outbound" },
+    { "city": "Washington",    "lat": 38.9072, "lon": -77.0369, "flowType": "capital", "volume": 38000000, "direction": "outbound" },
+    { "city": "New York",      "lat": 40.7128, "lon": -74.0060, "flowType": "talent",  "volume": 3100,     "direction": "outbound" },
+    { "city": "Cleveland",     "lat": 41.4993, "lon": -81.6944, "flowType": "talent",  "volume": 800,      "direction": "inbound"  }
+  ],
+
+  "articleTopics": {
+    "research": 0.55,
+    "capital":  0.20,
+    "mobility": 0.10,
+    "mismatch": 0.15
+  }
+}

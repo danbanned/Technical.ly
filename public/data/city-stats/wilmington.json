@@ -1,0 +1,52 @@
+{
+  "city": "Wilmington",
+  "state": "DE",
+  "lat": 39.7391,
+  "lon": -75.5398,
+  "updatedAt": "2026-05-01",
+
+  "researchSpending": 400000000,
+  "universityCount": 2,
+  "universities": [
+    { "name": "University of Delaware", "lat": 39.6778, "lon": -75.7508, "rd_spending": 340000000, "field": "Chemistry",      "patents": 58, "gradStudents": 2800 },
+    { "name": "Widener University",     "lat": 39.8327, "lon": -75.3991, "rd_spending":  60000000, "field": "Engineering/CS", "patents":  9, "gradStudents":  900 }
+  ],
+
+  "dealFlow": 180000000,
+  "dealCount": 29,
+  "dealFlowYoY": 31,
+  "topDealSector": "Fintech",
+  "deals": [
+    { "company": "PayLayer",   "amount": 24000000, "sector": "Fintech",    "date": "2026-04-08", "investor_city": "New York" },
+    { "company": "CardIQ",     "amount": 16000000, "sector": "Fintech",    "date": "2026-03-05", "investor_city": "Philadelphia" },
+    { "company": "ChemSolve",  "amount":  8800000, "sector": "Chemtech",   "date": "2026-01-28", "investor_city": "Boston" },
+    { "company": "VaultEdge",  "amount": 12500000, "sector": "Fintech",    "date": "2025-12-10", "investor_city": "New York" },
+    { "company": "LegalLedge", "amount":  5200000, "sector": "LegalTech",  "date": "2025-11-01", "investor_city": "Chicago" }
+  ],
+
+  "mobilityScore": 58,
+  "mobilityRating": "Moderate",
+  "newBusinessFormationRate": 9.5,
+  "jobMobilityIndex": 55,
+  "migrationNet": 600,
+  "minorityLedStartups": 5,
+  "minorityPopulation": 35,
+  "laborForceParticipation": 64.8,
+  "medianIncome": 44000,
+  "incomeGrowthYoY": 4.2,
+  "topResearchField": "Chemistry & Materials",
+
+  "ecosystemConnections": [
+    { "city": "Philadelphia", "lat": 39.9526, "lon": -75.1652, "flowType": "talent",  "volume": 2900,     "direction": "outbound" },
+    { "city": "Baltimore",    "lat": 39.2904, "lon": -76.6122, "flowType": "capital", "volume": 42000000, "direction": "inbound"  },
+    { "city": "Washington",   "lat": 38.9072, "lon": -77.0369, "flowType": "capital", "volume": 28000000, "direction": "outbound" },
+    { "city": "New York",     "lat": 40.7128, "lon": -74.0060, "flowType": "capital", "volume": 75000000, "direction": "inbound"  }
+  ],
+
+  "articleTopics": {
+    "research": 0.20,
+    "capital":  0.58,
+    "mobility": 0.15,
+    "mismatch": 0.07
+  }
+}

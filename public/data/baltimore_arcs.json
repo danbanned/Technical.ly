@@ -1,0 +1,44 @@
+[
+  {
+    "company": "Harborlight Bio (sample)",
+    "origin": [-71.0589, 42.3601],
+    "destination": [-76.6122, 39.2904],
+    "value": 12000000,
+    "year": 2024
+  },
+  {
+    "company": "Pier 4 Robotics (sample)",
+    "origin": [-74.006, 40.7128],
+    "destination": [-76.6019, 39.2867],
+    "value": 4500000,
+    "year": 2024
+  },
+  {
+    "company": "Inner Harbor AI (sample)",
+    "origin": [-122.4194, 37.7749],
+    "destination": [-76.6155, 39.2989],
+    "value": 8200000,
+    "year": 2024
+  },
+  {
+    "company": "Charm City Health (sample)",
+    "origin": [-77.0369, 38.9072],
+    "destination": [-76.6322, 39.3001],
+    "value": 2300000,
+    "year": 2024
+  },
+  {
+    "company": "Patterson Park Labs (sample)",
+    "origin": [-87.6298, 41.8781],
+    "destination": [-76.5915, 39.311],
+    "value": 15000000,
+    "year": 2024
+  },
+  {
+    "company": "Harborlight Bio (sample)",
+    "origin": [-71.0589, 42.3601],
+    "destination": [-76.6122, 39.2904],
+    "value": 3500000,
+    "year": 2023
+  }
+]

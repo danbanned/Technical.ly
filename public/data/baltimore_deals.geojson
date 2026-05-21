@@ -1,0 +1,83 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-76.6122, 39.2904] },
+      "properties": {
+        "company": "Harborlight Bio (sample)",
+        "deal_amount": 12000000,
+        "deal_date": "2024-03-15",
+        "year": 2024,
+        "sector": "Biotech",
+        "city": "Baltimore",
+        "state": "MD"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-76.6019, 39.2867] },
+      "properties": {
+        "company": "Pier 4 Robotics (sample)",
+        "deal_amount": 4500000,
+        "deal_date": "2024-05-02",
+        "year": 2024,
+        "sector": "Robotics",
+        "city": "Baltimore",
+        "state": "MD"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-76.6155, 39.2989] },
+      "properties": {
+        "company": "Inner Harbor AI (sample)",
+        "deal_amount": 8200000,
+        "deal_date": "2024-07-21",
+        "year": 2024,
+        "sector": "AI/ML",
+        "city": "Baltimore",
+        "state": "MD"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-76.6322, 39.3001] },
+      "properties": {
+        "company": "Charm City Health (sample)",
+        "deal_amount": 2300000,
+        "deal_date": "2024-02-10",
+        "year": 2024,
+        "sector": "Healthtech",
+        "city": "Baltimore",
+        "state": "MD"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-76.5915, 39.3110] },
+      "properties": {
+        "company": "Patterson Park Labs (sample)",
+        "deal_amount": 15000000,
+        "deal_date": "2024-09-12",
+        "year": 2024,
+        "sector": "Biotech",
+        "city": "Baltimore",
+        "state": "MD"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [-76.6122, 39.2904] },
+      "properties": {
+        "company": "Harborlight Bio (sample)",
+        "deal_amount": 3500000,
+        "deal_date": "2023-06-20",
+        "year": 2023,
+        "sector": "Biotech",
+        "city": "Baltimore",
+        "state": "MD"
+      }
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "city": "Philadelphia",
+  "state": "PA",
+  "lat": 39.9526,
+  "lon": -75.1652,
+  "updatedAt": "2026-05-01",
+
+  "researchSpending": 2100000000,
+  "universityCount": 6,
+  "universities": [
+    { "name": "University of Pennsylvania", "lat": 39.9522, "lon": -75.1932, "rd_spending": 1250000000, "field": "Life Sciences",    "patents": 198, "gradStudents": 6400 },
+    { "name": "Drexel University",          "lat": 39.9566, "lon": -75.1898, "rd_spending":  380000000, "field": "Engineering/CS",   "patents":  72, "gradStudents": 3100 },
+    { "name": "Temple University",          "lat": 39.9811, "lon": -75.1553, "rd_spending":  295000000, "field": "Life Sciences",    "patents":  44, "gradStudents": 4800 },
+    { "name": "Jefferson",                  "lat": 39.9470, "lon": -75.1575, "rd_spending":  120000000, "field": "Medical/Health",   "patents":  19, "gradStudents": 1900 },
+    { "name": "Villanova University",       "lat": 40.0360, "lon": -75.3427, "rd_spending":   35000000, "field": "Engineering/CS",   "patents":  11, "gradStudents":  800 },
+    { "name": "Haverford College",          "lat": 40.0104, "lon": -75.3043, "rd_spending":   20000000, "field": "Sciences",         "patents":   4, "gradStudents":  200 }
+  ],
+
+  "dealFlow": 480000000,
+  "dealCount": 87,
+  "dealFlowYoY": 22,
+  "topDealSector": "Health Tech",
+  "deals": [
+    { "company": "HealthBridge",   "amount": 28000000, "sector": "Health Tech",  "date": "2026-04-01", "investor_city": "New York" },
+    { "company": "CivicEngine",    "amount": 14000000, "sector": "Civic Tech",   "date": "2026-03-10", "investor_city": "Washington" },
+    { "company": "LogiCore",       "amount": 32000000, "sector": "Logistics",    "date": "2026-02-14", "investor_city": "Chicago" },
+    { "company": "BioPath",        "amount": 18500000, "sector": "Biotech",      "date": "2026-01-20", "investor_city": "Boston" },
+    { "company": "StackMed",       "amount":  9800000, "sector": "Health Tech",  "date": "2025-12-03", "investor_city": "San Francisco" }
+  ],
+
+  "mobilityScore": 54,
+  "mobilityRating": "Moderate",
+  "newBusinessFormationRate": 10.7,
+  "jobMobilityIndex": 50,
+  "migrationNet": 800,
+  "minorityLedStartups": 9,
+  "minorityPopulation": 44,
+  "laborForceParticipation": 63.2,
+  "medianIncome": 48000,
+  "incomeGrowthYoY": 3.4,
+  "topResearchField": "Life Sciences",
+
+  "ecosystemConnections": [
+    { "city": "Baltimore",   "lat": 39.2904, "lon": -76.6122, "flowType": "talent",  "volume": 2800,     "direction": "inbound"  },
+    { "city": "Washington",  "lat": 38.9072, "lon": -77.0369, "flowType": "capital", "volume": 65000000, "direction": "outbound" },
+    { "city": "New York",    "lat": 40.7128, "lon": -74.0060, "flowType": "capital", "volume": 95000000, "direction": "inbound"  },
+    { "city": "Wilmington",  "lat": 39.7391, "lon": -75.5398, "flowType": "talent",  "volume": 1100,     "direction": "outbound" },
+    { "city": "Pittsburgh",  "lat": 40.4406, "lon": -79.9959, "flowType": "talent",  "volume": 900,      "direction": "inbound"  }
+  ],
+
+  "articleTopics": {
+    "research": 0.30,
+    "capital":  0.48,
+    "mobility": 0.14,
+    "mismatch": 0.08
+  }
+}

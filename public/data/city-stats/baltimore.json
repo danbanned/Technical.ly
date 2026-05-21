@@ -1,0 +1,55 @@
+{
+  "city": "Baltimore",
+  "state": "MD",
+  "lat": 39.2904,
+  "lon": -76.6122,
+  "updatedAt": "2026-05-01",
+
+  "researchSpending": 3900000000,
+  "universityCount": 4,
+  "universities": [
+    { "name": "Johns Hopkins University",            "lat": 39.3299, "lon": -76.6205, "rd_spending": 3180000000, "field": "Medical/Health",  "patents": 342, "gradStudents": 8200 },
+    { "name": "University of Maryland Baltimore",    "lat": 39.2904, "lon": -76.6253, "rd_spending":  680000000, "field": "Medical/Health",  "patents":  87, "gradStudents": 3400 },
+    { "name": "Morgan State University",             "lat": 39.3382, "lon": -76.6090, "rd_spending":   45000000, "field": "Engineering/CS",  "patents":  12, "gradStudents": 1200 },
+    { "name": "UMBC",                                "lat": 39.2550, "lon": -76.6175, "rd_spending":   84000000, "field": "Engineering/CS",  "patents":  28, "gradStudents": 1800 }
+  ],
+
+  "dealFlow": 120000000,
+  "dealCount": 23,
+  "dealFlowYoY": -15,
+  "topDealSector": "Biotech",
+  "deals": [
+    { "company": "BioSpark",   "amount": 12000000, "sector": "Biotech",     "date": "2026-03-15", "investor_city": "New York" },
+    { "company": "DataNest",   "amount":  8500000, "sector": "AI/ML",       "date": "2026-02-20", "investor_city": "San Francisco" },
+    { "company": "MedVault",   "amount": 15000000, "sector": "Healthtech",  "date": "2026-01-10", "investor_city": "Boston" },
+    { "company": "EduLift",    "amount":  3200000, "sector": "Edtech",      "date": "2025-11-05", "investor_city": "Washington" },
+    { "company": "GreenBlock", "amount":  5800000, "sector": "CleanTech",   "date": "2025-10-18", "investor_city": "Philadelphia" }
+  ],
+
+  "mobilityScore": 62,
+  "mobilityRating": "Moderate",
+  "newBusinessFormationRate": 8.3,
+  "jobMobilityIndex": 54,
+  "migrationNet": -1200,
+  "minorityLedStartups": 4,
+  "minorityPopulation": 63,
+  "laborForceParticipation": 61.5,
+  "medianIncome": 52000,
+  "incomeGrowthYoY": 2.1,
+  "topResearchField": "Medical & Health Sciences",
+
+  "ecosystemConnections": [
+    { "city": "Washington",    "lat": 38.9072, "lon": -77.0369, "flowType": "talent",  "volume": 3400,      "direction": "outbound" },
+    { "city": "Philadelphia",  "lat": 39.9526, "lon": -75.1652, "flowType": "capital", "volume": 85000000,  "direction": "inbound"  },
+    { "city": "Boston",        "lat": 42.3601, "lon": -71.0589, "flowType": "capital", "volume": 120000000, "direction": "outbound" },
+    { "city": "New York",      "lat": 40.7128, "lon": -74.0060, "flowType": "talent",  "volume": 2100,      "direction": "outbound" },
+    { "city": "San Francisco", "lat": 37.7749, "lon": -122.4194,"flowType": "capital", "volume": 95000000,  "direction": "inbound"  }
+  ],
+
+  "articleTopics": {
+    "research": 0.65,
+    "capital":  0.15,
+    "mobility": 0.12,
+    "mismatch": 0.08
+  }
+}

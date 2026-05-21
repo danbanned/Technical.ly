@@ -1,0 +1,56 @@
+{
+  "city": "Washington",
+  "state": "DC",
+  "lat": 38.9072,
+  "lon": -77.0369,
+  "updatedAt": "2026-05-01",
+
+  "researchSpending": 2800000000,
+  "universityCount": 5,
+  "universities": [
+    { "name": "Georgetown University",          "lat": 38.9076, "lon": -77.0723, "rd_spending":  850000000, "field": "Public Policy",  "patents":  62, "gradStudents": 5100 },
+    { "name": "George Washington University",   "lat": 38.8997, "lon": -77.0478, "rd_spending":  720000000, "field": "Engineering/CS", "patents":  78, "gradStudents": 6200 },
+    { "name": "American University",            "lat": 38.9371, "lon": -77.0871, "rd_spending":  480000000, "field": "Public Policy",  "patents":  31, "gradStudents": 3400 },
+    { "name": "Howard University",              "lat": 38.9221, "lon": -77.0200, "rd_spending":  580000000, "field": "Medical/Health", "patents":  44, "gradStudents": 4100 },
+    { "name": "Catholic University",            "lat": 38.9337, "lon": -77.0003, "rd_spending":  170000000, "field": "Sciences",       "patents":  18, "gradStudents": 1200 }
+  ],
+
+  "dealFlow": 95000000,
+  "dealCount": 18,
+  "dealFlowYoY": -4,
+  "topDealSector": "GovTech",
+  "deals": [
+    { "company": "PoliceDash",  "amount": 11000000, "sector": "GovTech",     "date": "2026-03-22", "investor_city": "New York" },
+    { "company": "ClearRoute",  "amount":  8200000, "sector": "Defense Tech", "date": "2026-02-08", "investor_city": "Washington" },
+    { "company": "VetPath",     "amount":  7500000, "sector": "Health Tech",  "date": "2026-01-15", "investor_city": "Boston" },
+    { "company": "DataGov",     "amount": 14000000, "sector": "GovTech",     "date": "2025-12-01", "investor_city": "San Francisco" },
+    { "company": "PolicyAI",    "amount":  5400000, "sector": "AI/ML",       "date": "2025-11-10", "investor_city": "Philadelphia" }
+  ],
+
+  "mobilityScore": 71,
+  "mobilityRating": "High",
+  "newBusinessFormationRate": 12.4,
+  "jobMobilityIndex": 68,
+  "migrationNet": 4200,
+  "minorityLedStartups": 8,
+  "minorityPopulation": 48,
+  "laborForceParticipation": 69.0,
+  "medianIncome": 90000,
+  "incomeGrowthYoY": 3.9,
+  "topResearchField": "Public Policy & Defense",
+
+  "ecosystemConnections": [
+    { "city": "Baltimore",     "lat": 39.2904, "lon": -76.6122, "flowType": "talent",  "volume": 3400,      "direction": "inbound"  },
+    { "city": "Philadelphia",  "lat": 39.9526, "lon": -75.1652, "flowType": "capital", "volume": 65000000,  "direction": "inbound"  },
+    { "city": "New York",      "lat": 40.7128, "lon": -74.0060, "flowType": "capital", "volume": 120000000, "direction": "outbound" },
+    { "city": "Boston",        "lat": 42.3601, "lon": -71.0589, "flowType": "talent",  "volume": 1800,      "direction": "outbound" },
+    { "city": "San Francisco", "lat": 37.7749, "lon": -122.4194,"flowType": "capital", "volume": 85000000,  "direction": "outbound" }
+  ],
+
+  "articleTopics": {
+    "research": 0.45,
+    "capital":  0.18,
+    "mobility": 0.30,
+    "mismatch": 0.07
+  }
+}
