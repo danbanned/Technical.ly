@@ -118,6 +118,12 @@ class Converter {
   toLonLat(gx, gz) {
     return { lon: this._lon + gx / this._mpLon, lat: this._lat + gz / this._mpLat };
   }
+  // Convert absolute lat/lon to grid coordinates (meters from city center)
+  toGrid(lat, lon) {
+    const dLat = lat - this._lat;
+    const dLon = lon - this._lon;
+    return { gx: dLon * this._mpLon, gz: dLat * this._mpLat };
+  }
   // Returns flat degrees array [lon0,lat0, lon1,lat1, lon2,lat2, lon3,lat3]
   rect(cx, cz, w, d) {
     const hw = w / 2, hd = d / 2;
@@ -367,6 +373,78 @@ export default function FakeCityGenerator() {
     }
   }
 
+  // ── Resolve a landmark's grid coordinates (gx, gz) from seed data ──────
+  function resolveLandmarkGridCoords(city, cityData, lm) {
+    const C = conv.current;
+    let lat, lon;
+
+    // 1. Explicit lat/lon (highest priority)
+    if (lm.lat !== undefined && lm.lon !== undefined) {
+      lat = lm.lat;
+      lon = lm.lon;
+    }
+    // 2. University reference – look up real coordinates
+    else if (lm.universityRef) {
+      const uni = cityData.universities?.find(u => u.name === lm.universityRef);
+      if (!uni) {
+        console.warn(`University "${lm.universityRef}" not found for landmark "${lm.name}" – skipping.`);
+        return null;
+      }
+      lat = uni.lat;
+      lon = uni.lon;
+    }
+    else if (lm.techCenterRef) {
+      const techCenter = cityData.techCenters?.find(tc => tc.name === lm.techCenterRef);
+      if (!techCenter) {
+        console.warn(`Tech center "${lm.techCenterRef}" not found for landmark "${lm.name}" – skipping.`);
+        return null;
+      }
+      lat = techCenter.lat;
+      lon = techCenter.lon;
+    }
+    else if (lm.hospitalRef) {
+      const hospital = cityData.hospitals?.find(h => h.name === lm.hospitalRef);
+      if (!hospital) {
+        console.warn(`Hospital "${lm.hospitalRef}" not found for landmark "${lm.name}" – skipping.`);
+        return null;
+      }
+      lat = hospital.lat;
+      lon = hospital.lon;
+    }
+    else if (lm.financialRef) {
+      const district = cityData.financialDistricts?.find(fd => fd.name === lm.financialRef);
+      if (!district) {
+        console.warn(`Financial district "${lm.financialRef}" not found for landmark "${lm.name}" – skipping.`);
+        return null;
+      }
+      lat = district.lat;
+      lon = district.lon;
+    }
+    else if (lm.transitRef) {
+      const transitHub = cityData.transitHubs?.find(th => th.name === lm.transitRef);
+      if (!transitHub) {
+        console.warn(`Transit hub "${lm.transitRef}" not found for landmark "${lm.name}" – skipping.`);
+        return null;
+      }
+      lat = transitHub.lat;
+      lon = transitHub.lon;
+    }
+    // 3. Legacy gridX/gridZ (fallback)
+    else if (lm.gridX !== undefined && lm.gridZ !== undefined) {
+      const pos = C.toLonLat(lm.gridX, lm.gridZ);
+      lat = pos.lat;
+      lon = pos.lon;
+    }
+    else {
+      console.warn(`Landmark "${lm.name}" has no location data (lat/lon, universityRef, techCenterRef, hospitalRef, financialRef, transitRef, or gridX/gridZ) – skipping.`);
+      return null;
+    }
+
+    // Convert absolute lat/lon to grid coordinates (meters from city center)
+    const { gx, gz } = C.toGrid(lat, lon);
+    return { gx, gz, lat, lon };
+  }
+
   // ── Landmark placement (seed-data driven) ────────────────────────────
   function addLandmarks(city, cityData, viewer) {
     const C = conv.current;
@@ -376,8 +454,12 @@ export default function FakeCityGenerator() {
       const spec = TEMPLATE_MAP[lm.template];
       if (!spec) continue;
 
+      const grid = resolveLandmarkGridCoords(city, cityData, lm);
+      if (!grid) continue;
+      const { gx, gz, lat, lon } = grid;
+
       const height = lm.height * BLOCK_SCALE;
-      const fp     = rectFootprint(C, lm.gridX, lm.gridZ, spec.footW, spec.footW);
+      const fp     = rectFootprint(C, gx, gz, spec.footW, spec.footW);
 
       renderShape(
         SHAPE_REGISTRY[spec.shapeKey],
@@ -389,10 +471,7 @@ export default function FakeCityGenerator() {
         `LM — ${lm.name}`
       );
 
-      const mid = C.toLonLat(lm.gridX, lm.gridZ);
-
-      // ── Billboard sign face (wall entity, visible up-close) ──────────
-      // Runs E-W above the beacon; canvas texture carries name + stat.
+      // Billboard placement – use the resolved lat/lon
       const mpLon = 111320 * Math.cos(city.lat * Math.PI / 180);
       const panelW = spec.footW * 0.88;
       const halfWDeg = (panelW / 2) / mpLon;
@@ -403,8 +482,8 @@ export default function FakeCityGenerator() {
         name: `LM — ${lm.name} sign`,
         wall: {
           positions: Cesium.Cartesian3.fromDegreesArray([
-            mid.lon - halfWDeg, mid.lat,
-            mid.lon + halfWDeg, mid.lat,
+            lon - halfWDeg, lat,
+            lon + halfWDeg, lat,
           ]),
           minimumHeights: [signBase, signBase],
           maximumHeights: [signBase + panelH, signBase + panelH],
@@ -419,10 +498,10 @@ export default function FakeCityGenerator() {
         },
       }));
 
-      // ── Floating label (visible at medium–far range) ─────────────────
+      // Floating label
       buildRef.current.push(viewer.entities.add({
         name: `LM — ${lm.name} label`,
-        position: Cesium.Cartesian3.fromDegrees(mid.lon, mid.lat, signBase + panelH + 8),
+        position: Cesium.Cartesian3.fromDegrees(lon, lat, signBase + panelH + 8),
         label: {
           text: lm.name,
           font: 'bold 13px Inter, Arial, sans-serif',
@@ -514,8 +593,9 @@ export default function FakeCityGenerator() {
 
     for (const lm of landmarks) {
       if (!TEMPLATE_MAP[lm.template]) continue;
-      const gx = lm.gridX;
-      const gz = lm.gridZ;
+      const grid = resolveLandmarkGridCoords(city, cityData, lm);
+      if (!grid) continue;
+      const { gx, gz } = grid;
 
       // ── Universal ring (training, housing, retail) ──────────────────
       for (let i = 0; i < 3; i++) {

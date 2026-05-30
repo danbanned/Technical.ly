@@ -1,13 +1,13 @@
 /**
  * Editorial fixtures for the Living Article demo.
  *
- * Each article advertises its city via `city`/`lat`/`lon` so the
- * IntersectionObserver can hand the camera a destination. `layers`
- * names which data tracks should glow when the article is active.
- *
- * Replace with a CMS fetch later — the rest of the app only depends
- * on the shape, not the source.
+ * Each article advertises its city and which landmark to focus on.
+ * The focusLandmark is a template string (e.g., 'universityTower')
+ * that matches the `template` field in that city's `landmarks` array
+ * inside seedCityData.js. Industrial cluster data is stored with the
+ * landmark itself, not in the article.
  */
+
 export const ARTICLES = [
   {
     id: 'baltimore-jhu-rd',
@@ -22,7 +22,7 @@ export const ARTICLES = [
     author: 'Dan Bowers',
     date: 'May 14, 2026',
     readTime: '6 min',
-    stats: { research: '3.9B', deals: '120M', mobility: 62, mismatch: 'High' },
+    stats: { research: '3.9B', deals: '120M', mobility: 62, mismatch: 'High', funding: '1.8B' },
     layers: ['research', 'deals', 'mobility'],
     image: 'linear-gradient(135deg,#0097A7,#00D1FF)',
   },
@@ -39,7 +39,7 @@ export const ARTICLES = [
     author: 'Maya Cho',
     date: 'May 12, 2026',
     readTime: '8 min',
-    stats: { research: '2.1B', deals: '480M', mobility: 54, mismatch: 'Medium' },
+    stats: { research: '2.1B', deals: '480M', mobility: 54, mismatch: 'Medium', funding: '1.2B' },
     layers: ['deals', 'mobility'],
     image: 'linear-gradient(135deg,#FF8A00,#C56500)',
   },
@@ -56,7 +56,7 @@ export const ARTICLES = [
     author: 'Jamal Reeves',
     date: 'May 10, 2026',
     readTime: '7 min',
-    stats: { research: '1.6B', deals: '210M', mobility: 47, mismatch: 'High' },
+    stats: { research: '1.6B', deals: '210M', mobility: 47, mismatch: 'High', funding: '0.8B' },
     layers: ['research', 'mobility'],
     image: 'linear-gradient(135deg,#1A237E,#455A64)',
   },
@@ -73,7 +73,7 @@ export const ARTICLES = [
     author: 'Sofia Ramirez',
     date: 'May 8, 2026',
     readTime: '9 min',
-    stats: { research: '2.8B', deals: '95M', mobility: 71, mismatch: 'Low' },
+    stats: { research: '2.8B', deals: '95M', mobility: 71, mismatch: 'Low', funding: '1.5B' },
     layers: ['research'],
     image: 'linear-gradient(135deg,#00D1FF,#1A237E)',
   },
@@ -90,7 +90,7 @@ export const ARTICLES = [
     author: 'Renée Park',
     date: 'May 6, 2026',
     readTime: '5 min',
-    stats: { research: '0.4B', deals: '180M', mobility: 58, mismatch: 'Medium' },
+    stats: { research: '0.4B', deals: '180M', mobility: 58, mismatch: 'Medium', funding: '0.6B' },
     layers: ['deals'],
     image: 'linear-gradient(135deg,#FF005C,#FF8A00)',
   },

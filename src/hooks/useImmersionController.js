@@ -179,6 +179,14 @@ export function useImmersionController() {
             })
           );
           window.dispatchEvent(
+            new CustomEvent('immersion:cinematicTour', {
+              detail: {
+                city,
+                focusLandmark: city.focusLandmark,
+              },
+            })
+          );
+          window.dispatchEvent(
             new CustomEvent('immersion:boardLayout', {
               detail: { city, ecosystem: eco },
             })

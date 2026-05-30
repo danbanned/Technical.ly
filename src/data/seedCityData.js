@@ -1,11 +1,15 @@
 /**
  * seedCityData.js — 11 cities with full economic profiles
  *
- * Each city provides:
+ * Each city landmark provides:
  *   - Core metrics (researchSpending, dealFlow, mobilityScore, …)
  *   - stats{}: 25 economic categories, each with a value and percentile (0–100).
  *     percentile drives building-color weighting in FakeCityGenerator.
  *   - universities[]: patent counts → bee density in LivingEcosystem
+ *   - techCenters[]: named innovation districts / tech hubs with real lat/lon
+ *   - hospitals[]: major medical centers with real lat/lon
+ *   - financialDistricts[]: banking/VC hubs with real lat/lon
+ *   - transitHubs[]: train stations and airports with real lat/lon
  *   - ecosystemConnections[]: planes and bridge lines
  *   - beeCounts{}: per-university bee density
  *   - planeCounts{}: per-destination plane count.
@@ -20,6 +24,9 @@
  *   techTalent         #00E676   newBusinesses     #E040FB
  *   minorityOwned      #FF005C   womenOwned        #FF4081
  *   publicSpending     #607D8B   transit           #90A4AE
+ *
+ * Landmarks may reference universities, tech centers, hospitals, financial
+ * districts, or transit hubs by name instead of storing explicit coordinates.
  */
 
 // ─── Shared economic-stat percentiles shape ────────────────────────────────
@@ -43,7 +50,7 @@ export const SEED_CITIES = {
       universityResearch:    { value: 3.9e9,  percentile: 92 },
       corporateResearch:     { value: 4.5e8,  percentile: 45 },
       patents:               { value: 342,    percentile: 78 },
-      ventureCapital:        { value: 1.2e8,  percentile: 22 },  // ← MISMATCH
+      ventureCapital:        { value: 1.2e8,  percentile: 22 },
       privateEquity:         { value: 8e7,    percentile: 18 },
       angelInvestment:       { value: 3.5e7,  percentile: 30 },
       bankLending:           { value: 2.1e9,  percentile: 55 },
@@ -56,7 +63,7 @@ export const SEED_CITIES = {
       commercialRealEstate:  { value: 8.5e8,  percentile: 40 },
       residentialRealEstate: { value: 3.2e9,  percentile: 48 },
       industrialRealEstate:  { value: 4.5e8,  percentile: 35 },
-      minorityOwned:         { value: 1600,   percentile: 15 },  // ← MISMATCH
+      minorityOwned:         { value: 1600,   percentile: 15 },
       womenOwned:            { value: 2800,   percentile: 28 },
       communityBanking:      { value: 4.5e8,  percentile: 55 },
       affordableHousing:     { value: 2.8e7,  percentile: 32 },
@@ -68,10 +75,36 @@ export const SEED_CITIES = {
     },
 
     universities: [
-      { name: 'Johns Hopkins University',          lat: 39.3299, lon: -76.6205, rd_spending: 3.18e9, field: 'Medical/Health',  patents: 342, gradStudents: 8200,  minorityLed: 12 },
+      { name: 'Johns Hopkins University',  
+                lat: 39.3299, lon: -76.6205,
+                 rd_spending: 3.18e9,
+                  field: 'Medical/Health', 
+                  patents: 342,
+                   gradStudents: 8200,
+                     minorityLed: 12 },
       { name: 'University of Maryland Baltimore',  lat: 39.2904, lon: -76.6253, rd_spending: 6.8e8,  field: 'Medical/Health',  patents: 87,  gradStudents: 3400,  minorityLed: 22 },
       { name: 'Morgan State University',           lat: 39.3382, lon: -76.6090, rd_spending: 4.5e7,  field: 'Engineering/CS',  patents: 12,  gradStudents: 1200,  minorityLed: 68 },
       { name: 'UMBC',                              lat: 39.2550, lon: -76.6175, rd_spending: 8.4e7,  field: 'Engineering/CS',  patents: 28,  gradStudents: 1800,  minorityLed: 35 },
+    ],
+
+    techCenters: [
+      { name: 'Port Covington Innovation District', lat: 39.2541, lon: -76.5992, focus: 'Mixed-Use Tech', rdSpending: 1.2e8, patents: 18, startups: 45 },
+      { name: 'Inner Harbor Tech Corridor', lat: 39.2833, lon: -76.6156, focus: 'Cybersecurity', rdSpending: 2.5e8, patents: 32, startups: 60 },
+    ],
+
+    hospitals: [
+      { name: 'Johns Hopkins Hospital', lat: 39.2975, lon: -76.5932, beds: 1200, researchVolume: 2.5e9, traumaLevel: 1 },
+      { name: 'University of Maryland Medical Center', lat: 39.2885, lon: -76.6219, beds: 800, researchVolume: 5.8e8, traumaLevel: 1 },
+    ],
+
+    financialDistricts: [
+      { name: 'Harbor East Financial District', lat: 39.2905, lon: -76.6120, focus: 'Asset Management', dealFlow: 2.5e9, firms: 120 },
+      { name: 'Pratt Street Corridor', lat: 39.2867, lon: -76.6102, focus: 'Venture Capital', dealFlow: 1.2e9, firms: 45 },
+    ],
+
+    transitHubs: [
+      { name: 'Penn Station', lat: 39.3072, lon: -76.6158, mode: 'Rail', dailyRidership: 45000, lines: ['Amtrak', 'MARC', 'Light Rail'] },
+      { name: 'Baltimore/Washington International Airport', lat: 39.1756, lon: -76.6682, mode: 'Air', dailyPassengers: 80000 },
     ],
 
     ecosystemConnections: [
@@ -94,11 +127,59 @@ export const SEED_CITIES = {
     planeCounts: { Washington: 8, Philadelphia: 5 },
 
     landmarks: [
-      { template: 'comcastTower',    gridX: 0,    gridZ: 0,    name: 'Legg Mason Tower',       height: 32, color: '#0D47A1', stat: 'corporateResearch' },
-      { template: 'universityTower', gridX: -120, gridZ: 80,   name: 'JHU Research Tower',     height: 40, color: '#00D1FF', stat: 'universityResearch' },
-      { template: 'hospitalComplex', gridX: -80,  gridZ: -60,  name: 'Johns Hopkins Hospital', height: 30, color: '#E91E63', stat: 'healthcareTalent' },
-      { template: 'financialTower',  gridX: 100,  gridZ: -30,  name: 'VC Hub',                 height: 18, color: '#FF8A00', stat: 'ventureCapital' },
-      { template: 'transitHub',      gridX: 60,   gridZ: 140,  name: 'Penn Station',           height: 15, color: '#607D8B', stat: 'transit' },
+      {
+        template: 'comcastTower',
+        financialRef: 'Harbor East Financial District',
+        name: 'Legg Mason Tower', height: 32, color: '#0D47A1', stat: 'corporateResearch',
+        industrialCluster: [
+          { CorporateResearch: 'Legg Mason' },
+          { CommercialRealEstate: 'Harbor East' },
+          { ProfessionalBusinessServices: 'Pratt Street' }
+        ]
+      },
+      {
+        template: 'universityTower',
+        universityRef: 'Johns Hopkins University',
+        name: 'JHU Research Tower', height: 40, color: '#00D1FF', stat: 'universityResearch',
+        industrialCluster: [
+          { ConstructionRealEstate: 'Johns Hopkins University' },
+          { EducationResearch: 'Johns Hopkins University' },
+          { HealthLifeSciences: 'Johns Hopkins University' },
+          { Manufacturing: 'Johns Hopkins University' },
+          { ProfessionalBusinessServices: 'Johns Hopkins University' },
+          { TransportationLogistics: 'Johns Hopkins University' }
+        ]
+      },
+      {
+        template: 'hospitalComplex',
+        hospitalRef: 'Johns Hopkins Hospital',
+        name: 'Johns Hopkins Hospital', height: 30, color: '#E91E63', stat: 'healthcareTalent',
+        industrialCluster: [
+          { HealthLifeSciences: 'Johns Hopkins Hospital' },
+          { MedicalResearch: 'Johns Hopkins Medicine' },
+          { Biotech: 'East Baltimore Development' }
+        ]
+      },
+      {
+        template: 'financialTower',
+        financialRef: 'Pratt Street Corridor',
+        name: 'VC Hub', height: 18, color: '#FF8A00', stat: 'ventureCapital',
+        industrialCluster: [
+          { VentureCapital: 'Baltimore Angels' },
+          { PrivateEquity: 'Brown Advisory' },
+          { BankLending: 'M&T Bank' }
+        ]
+      },
+      {
+        template: 'transitHub',
+        transitRef: 'Penn Station',
+        name: 'Penn Station', height: 15, color: '#607D8B', stat: 'transit',
+        industrialCluster: [
+          { Transit: 'Penn Station' },
+          { Infrastructure: 'Amtrak Northeast Corridor' },
+          { TransportationLogistics: 'MARC Train' }
+        ]
+      }
     ],
   },
 
@@ -152,6 +233,26 @@ export const SEED_CITIES = {
       { name: 'Brandeis University', lat: 42.3656, lon: -71.2596, rd_spending: 9e7,   field: 'Life Sciences',  patents: 15,  gradStudents: 2200,  minorityLed: 30 },
     ],
 
+    techCenters: [
+      { name: 'Kendall Square', lat: 42.3625, lon: -71.0864, focus: 'Biotech & Tech', rdSpending: 4.2e9, patents: 890, startups: 300 },
+      { name: 'Seaport District', lat: 42.3498, lon: -71.0459, focus: 'Venture Capital', rdSpending: 2.1e9, patents: 210, startups: 180 },
+    ],
+
+    hospitals: [
+      { name: 'Mass General Hospital', lat: 42.3625, lon: -71.0694, beds: 999, researchVolume: 1.2e9, traumaLevel: 1 },
+      { name: "Brigham and Women's Hospital", lat: 42.3355, lon: -71.1087, beds: 793, researchVolume: 8.5e8, traumaLevel: 1 },
+    ],
+
+    financialDistricts: [
+      { name: 'Financial District', lat: 42.3555, lon: -71.0605, focus: 'Banking & Corporate', dealFlow: 1.2e10, firms: 450 },
+      { name: 'Seaport District', lat: 42.3498, lon: -71.0459, focus: 'Venture Capital', dealFlow: 8.5e9, firms: 200 },
+    ],
+
+    transitHubs: [
+      { name: 'South Station', lat: 42.3522, lon: -71.0552, mode: 'Rail & Bus', dailyRidership: 150000, lines: ['Red Line', 'Commuter Rail', 'Amtrak'] },
+      { name: 'North Station', lat: 42.3656, lon: -71.0614, mode: 'Rail', dailyRidership: 80000, lines: ['Orange Line', 'Commuter Rail'] },
+    ],
+
     ecosystemConnections: [
       { city: 'New York',      lat: 40.7128, lon: -74.0060,  flowType: 'capital', volume: 0,    direction: 'bidirectional', dealValue: 2.5e9 },
       { city: 'San Francisco', lat: 37.7749, lon: -122.4194, flowType: 'capital', volume: 0,    direction: 'bidirectional', dealValue: 3.2e9 },
@@ -169,12 +270,68 @@ export const SEED_CITIES = {
     planeCounts: { 'New York': 25, 'San Francisco': 30, 'Washington': 10 },
 
     landmarks: [
-      { template: 'comcastTower',    gridX: 0,    gridZ: 0,    name: 'Boston Financial Tower',  height: 45, color: '#0D47A1', stat: 'corporateResearch' },
-      { template: 'universityTower', gridX: -150, gridZ: 100,  name: 'MIT Innovation Tower',    height: 42, color: '#00D1FF', stat: 'universityResearch' },
-      { template: 'universityTower', gridX: -100, gridZ: -80,  name: 'Harvard Research Tower',  height: 38, color: '#00D1FF', stat: 'universityResearch' },
-      { template: 'hospitalComplex', gridX: 120,  gridZ: 80,   name: 'Mass General Hospital',   height: 32, color: '#E91E63', stat: 'healthcareTalent' },
-      { template: 'financialTower',  gridX: 80,   gridZ: -50,  name: 'Seaport VC Hub',          height: 40, color: '#FF8A00', stat: 'ventureCapital' },
-      { template: 'transitHub',      gridX: -30,  gridZ: 160,  name: 'South Station',           height: 18, color: '#607D8B', stat: 'transit' },
+      {
+        template: 'comcastTower',
+        financialRef: 'Financial District',
+        name: 'Boston Financial Tower', height: 45, color: '#0D47A1', stat: 'corporateResearch',
+        industrialCluster: [
+          { CorporateResearch: 'Fidelity Investments' },
+          { CommercialRealEstate: 'Financial District' },
+          { ProfessionalBusinessServices: 'State Street' }
+        ]
+      },
+      {
+        template: 'universityTower',
+        universityRef: 'MIT',
+        name: 'MIT Innovation Tower', height: 42, color: '#00D1FF', stat: 'universityResearch',
+        industrialCluster: [
+          { EducationResearch: 'MIT' },
+          { TechTalent: 'Kendall Square' },
+          { Patents: 'MIT Technology Licensing Office' },
+          { NewBusinesses: 'The Engine' },
+          { RoboticsAI: 'CSAIL' }
+        ]
+      },
+      {
+        template: 'universityTower',
+        universityRef: 'Harvard University',
+        name: 'Harvard Research Tower', height: 38, color: '#00D1FF', stat: 'universityResearch',
+        industrialCluster: [
+          { EducationResearch: 'Harvard University' },
+          { HealthLifeSciences: 'Harvard Medical School' },
+          { GraduateOutput: 'Harvard Innovation Labs' }
+        ]
+      },
+      {
+        template: 'hospitalComplex',
+        hospitalRef: 'Mass General Hospital',
+        name: 'Mass General Hospital', height: 32, color: '#E91E63', stat: 'healthcareTalent',
+        industrialCluster: [
+          { HealthLifeSciences: 'Mass General Hospital' },
+          { Biotech: 'Partners HealthCare' },
+          { MedicalResearch: 'Broad Institute' }
+        ]
+      },
+      {
+        template: 'financialTower',
+        financialRef: 'Seaport District',
+        name: 'Seaport VC Hub', height: 40, color: '#FF8A00', stat: 'ventureCapital',
+        industrialCluster: [
+          { VentureCapital: 'Battery Ventures' },
+          { PrivateEquity: 'Bain Capital' },
+          { AngelInvestment: 'Rough Draft Ventures' }
+        ]
+      },
+      {
+        template: 'transitHub',
+        transitRef: 'South Station',
+        name: 'South Station', height: 18, color: '#607D8B', stat: 'transit',
+        industrialCluster: [
+          { Transit: 'South Station' },
+          { Infrastructure: 'MBTA Commuter Rail' },
+          { TransportationLogistics: 'Boston Express' }
+        ]
+      }
     ],
   },
 
@@ -225,6 +382,26 @@ export const SEED_CITIES = {
       { name: 'USF',                  lat: 37.7769, lon: -122.4516, rd_spending: 3.5e7, field: 'Life Sciences',  patents: 12,  gradStudents: 1500, minorityLed: 32 },
     ],
 
+    techCenters: [
+      { name: 'SOMA Tech Corridor', lat: 37.7825, lon: -122.4104, focus: 'Tech & VC', rdSpending: 8.5e9, patents: 2200, startups: 1200 },
+      { name: 'Mission Bay', lat: 37.7682, lon: -122.3936, focus: 'Life Sciences', rdSpending: 3.2e9, patents: 410, startups: 90 },
+    ],
+
+    hospitals: [
+      { name: 'UCSF Medical Center', lat: 37.7626, lon: -122.4580, beds: 800, researchVolume: 2.5e9, traumaLevel: 1 },
+      { name: 'San Francisco General Hospital', lat: 37.7620, lon: -122.4060, beds: 550, researchVolume: 1.2e8, traumaLevel: 1 },
+    ],
+
+    financialDistricts: [
+      { name: 'Financial District', lat: 37.7941, lon: -122.4025, focus: 'Banking', dealFlow: 2.5e10, firms: 600 },
+      { name: 'Sand Hill Road (Menlo Park)', lat: 37.4500, lon: -122.2000, focus: 'Venture Capital', dealFlow: 5e10, firms: 300 },
+    ],
+
+    transitHubs: [
+      { name: 'Transbay Transit Center', lat: 37.7898, lon: -122.3969, mode: 'Bus & Rail', dailyRidership: 35000 },
+      { name: 'San Francisco International Airport', lat: 37.6213, lon: -122.3790, mode: 'Air', dailyPassengers: 150000 },
+    ],
+
     ecosystemConnections: [
       { city: 'Boston',   lat: 42.3601, lon: -71.0589, flowType: 'capital', volume: 0, direction: 'bidirectional', dealValue: 3.2e9 },
       { city: 'New York', lat: 40.7128, lon: -74.0060, flowType: 'capital', volume: 0, direction: 'bidirectional', dealValue: 2.8e9 },
@@ -240,11 +417,57 @@ export const SEED_CITIES = {
     planeCounts: { Boston: 30, 'New York': 25 },
 
     landmarks: [
-      { template: 'comcastTower',    gridX: 0,    gridZ: 0,    name: 'Salesforce Tower',        height: 50, color: '#0D47A1', stat: 'corporateResearch' },
-      { template: 'financialTower',  gridX: -60,  gridZ: 40,   name: 'VC District Tower',       height: 45, color: '#FF8A00', stat: 'ventureCapital' },
-      { template: 'financialTower',  gridX: 70,   gridZ: -30,  name: 'Sand Hill Hub',           height: 42, color: '#FF6D00', stat: 'privateEquity' },
-      { template: 'universityTower', gridX: -180, gridZ: 120,  name: 'Stanford Research Tower', height: 35, color: '#00D1FF', stat: 'universityResearch' },
-      { template: 'transitHub',      gridX: 30,   gridZ: 150,  name: 'BART Hub',                height: 20, color: '#607D8B', stat: 'transit' },
+      {
+        template: 'comcastTower',
+        financialRef: 'Financial District',
+        name: 'Salesforce Tower', height: 50, color: '#0D47A1', stat: 'corporateResearch',
+        industrialCluster: [
+          { CorporateResearch: 'Salesforce' },
+          { TechTalent: 'SOMA' },
+          { CommercialRealEstate: 'Transbay District' }
+        ]
+      },
+      {
+        template: 'financialTower',
+        techCenterRef: 'SOMA Tech Corridor',
+        name: 'VC District Tower', height: 45, color: '#FF8A00', stat: 'ventureCapital',
+        industrialCluster: [
+          { VentureCapital: 'Sequoia Capital' },
+          { PrivateEquity: 'Hellman & Friedman' },
+          { AngelInvestment: 'Y Combinator' }
+        ]
+      },
+      {
+        template: 'financialTower',
+        financialRef: 'Sand Hill Road (Menlo Park)',
+        name: 'Sand Hill Hub', height: 42, color: '#FF6D00', stat: 'privateEquity',
+        industrialCluster: [
+          { PrivateEquity: 'Sand Hill Road' },
+          { VentureCapital: 'Andreessen Horowitz' },
+          { BankLending: 'Silicon Valley Bank' }
+        ]
+      },
+      {
+        template: 'universityTower',
+        universityRef: 'Stanford University',
+        name: 'Stanford Research Tower', height: 35, color: '#00D1FF', stat: 'universityResearch',
+        industrialCluster: [
+          { EducationResearch: 'Stanford University' },
+          { Patents: 'Stanford OTL' },
+          { TechTalent: 'Startup Garage' },
+          { HealthLifeSciences: 'Stanford Medicine' }
+        ]
+      },
+      {
+        template: 'transitHub',
+        transitRef: 'Transbay Transit Center',
+        name: 'BART Hub', height: 20, color: '#607D8B', stat: 'transit',
+        industrialCluster: [
+          { Transit: 'BART System' },
+          { Infrastructure: 'Transbay Transit Center' },
+          { TransportationLogistics: 'Muni Metro' }
+        ]
+      }
     ],
   },
 
@@ -293,6 +516,26 @@ export const SEED_CITIES = {
       { name: 'Duquesne University',        lat: 40.4367, lon: -79.9899, rd_spending: 3e7,   field: 'Life Sciences',  patents: 10,  gradStudents: 1200, minorityLed: 22 },
     ],
 
+    techCenters: [
+      { name: 'Robotics Row (Lawrenceville)', lat: 40.4675, lon: -79.9695, focus: 'Robotics & AI', rdSpending: 6.5e8, patents: 112, startups: 55 },
+      { name: 'The Pittsburgh Innovation District', lat: 40.4440, lon: -79.9457, focus: 'Advanced Manufacturing', rdSpending: 4.2e8, patents: 89, startups: 40 },
+    ],
+
+    hospitals: [
+      { name: 'UPMC Presbyterian', lat: 40.4404, lon: -79.9600, beds: 800, researchVolume: 1.5e9, traumaLevel: 1 },
+      { name: 'Allegheny General Hospital', lat: 40.4502, lon: -80.0030, beds: 600, researchVolume: 2.5e8, traumaLevel: 2 },
+    ],
+
+    financialDistricts: [
+      { name: 'Market Square', lat: 40.4406, lon: -79.9959, focus: 'Corporate', dealFlow: 1.2e9, firms: 80 },
+      { name: 'Steel Plaza', lat: 40.4448, lon: -80.0012, focus: 'Finance', dealFlow: 8e8, firms: 50 },
+    ],
+
+    transitHubs: [
+      { name: 'Steel Plaza T Station', lat: 40.4448, lon: -80.0012, mode: 'Light Rail', dailyRidership: 15000 },
+      { name: 'Pittsburgh International Airport', lat: 40.4941, lon: -80.2229, mode: 'Air', dailyPassengers: 30000 },
+    ],
+
     ecosystemConnections: [
       { city: 'Philadelphia', lat: 39.9526, lon: -75.1652, flowType: 'capital', volume: 0,    direction: 'inbound',  dealValue: 8e7 },
       { city: 'Washington',   lat: 38.9072, lon: -77.0369, flowType: 'talent',  volume: 1800, direction: 'outbound', dealValue: 0 },
@@ -309,10 +552,49 @@ export const SEED_CITIES = {
     planeCounts: { Philadelphia: 8 },
 
     landmarks: [
-      { template: 'comcastTower',    gridX: 0,    gridZ: 0,   name: 'PPG Place',          height: 30, color: '#0D47A1', stat: 'corporateResearch' },
-      { template: 'universityTower', gridX: -100, gridZ: 80,  name: 'CMU Robotics Tower', height: 38, color: '#00D1FF', stat: 'universityResearch' },
-      { template: 'hospitalComplex', gridX: 80,   gridZ: -50, name: ' Medical Center',height: 28, color: '#E91E63', stat: 'healthcareTalent' },
-      { template: 'transitHub',      gridX: -40,  gridZ: 130, name: 'Steel Plaza',        height: 14, color: '#607D8B', stat: 'transit' },
+      {
+        template: 'comcastTower',
+        financialRef: 'Market Square',
+        name: 'PPG Place', height: 30, color: '#0D47A1', stat: 'corporateResearch',
+        industrialCluster: [
+          { CorporateResearch: 'PPG Industries' },
+          { CommercialRealEstate: 'Market Square' },
+          { ProfessionalBusinessServices: 'PNC Bank' }
+        ]
+      },
+      {
+        template: 'universityTower',
+        universityRef: 'Carnegie Mellon University',
+        name: 'CMU Robotics Tower', height: 38, color: '#00D1FF', stat: 'universityResearch',
+        industrialCluster: [
+          { EducationResearch: 'Carnegie Mellon University' },
+          { RoboticsAI: 'CMU Robotics Institute' },
+          { AdvancedManufacturing: 'Mill 19' },
+          { HealthLifeSciences: 'UPMC' },
+          { ProfessionalBusinessServices: 'PPG Place' },
+          { TransportationLogistics: 'Steel Plaza' }
+        ]
+      },
+      {
+        template: 'hospitalComplex',
+        hospitalRef: 'UPMC Presbyterian',
+        name: 'Medical Center', height: 28, color: '#E91E63', stat: 'healthcareTalent',
+        industrialCluster: [
+          { HealthLifeSciences: 'UPMC Presbyterian' },
+          { MedicalResearch: 'Hillman Cancer Center' },
+          { Biotech: 'Pittsburgh Life Sciences Greenhouse' }
+        ]
+      },
+      {
+        template: 'transitHub',
+        transitRef: 'Steel Plaza T Station',
+        name: 'Steel Plaza', height: 14, color: '#607D8B', stat: 'transit',
+        industrialCluster: [
+          { Transit: 'Steel Plaza T Station' },
+          { Infrastructure: 'Port Authority Bus' },
+          { TransportationLogistics: 'Pittsburgh Amtrak' }
+        ]
+      }
     ],
   },
 
@@ -360,6 +642,26 @@ export const SEED_CITIES = {
       { name: 'Wayne State University', lat: 42.3585, lon: -83.0673, rd_spending: 2.5e8, field: 'Medical/Health', patents: 35,  gradStudents: 3200, minorityLed: 35 },
     ],
 
+    techCenters: [
+      { name: 'Michigan Central Innovation District', lat: 42.3305, lon: -83.0570, focus: 'Mobility & AI', rdSpending: 3.1e8, patents: 65, startups: 30 },
+      { name: 'TechTown Detroit', lat: 42.3512, lon: -83.0645, focus: 'Tech Incubation', rdSpending: 5.5e7, patents: 12, startups: 80 },
+    ],
+
+    hospitals: [
+      { name: 'Detroit Medical Center', lat: 42.3405, lon: -83.0607, beds: 2000, researchVolume: 3.5e8, traumaLevel: 1 },
+      { name: 'Henry Ford Hospital', lat: 42.3635, lon: -83.0821, beds: 900, researchVolume: 2.2e8, traumaLevel: 1 },
+    ],
+
+    financialDistricts: [
+      { name: 'Renaissance Center', lat: 42.3286, lon: -83.0430, focus: 'Corporate', dealFlow: 2.5e9, firms: 120 },
+      { name: 'Financial District', lat: 42.3300, lon: -83.0480, focus: 'Banking', dealFlow: 1.8e9, firms: 90 },
+    ],
+
+    transitHubs: [
+      { name: 'Detroit People Mover', lat: 42.3319, lon: -83.0523, mode: 'Monorail', dailyRidership: 12000 },
+      { name: 'Detroit Metropolitan Airport', lat: 42.2125, lon: -83.3488, mode: 'Air', dailyPassengers: 80000 },
+    ],
+
     ecosystemConnections: [
       { city: 'Chicago',   lat: 41.8781, lon: -87.6298, flowType: 'capital', volume: 0,    direction: 'inbound',  dealValue: 4e7 },
       { city: 'Cleveland', lat: 41.4993, lon: -81.6944, flowType: 'talent',  volume: 1200, direction: 'outbound', dealValue: 0 },
@@ -375,8 +677,26 @@ export const SEED_CITIES = {
     planeCounts: {},
 
     landmarks: [
-      { template: 'comcastTower', gridX: 0,   gridZ: 0,   name: 'GM Renaissance Center',  height: 35, color: '#0D47A1', stat: 'corporateResearch' },
-      { template: 'transitHub',   gridX: -50, gridZ: 120, name: 'Detroit Station',         height: 12, color: '#607D8B', stat: 'transit' },
+      {
+        template: 'comcastTower',
+        financialRef: 'Renaissance Center',
+        name: 'GM Renaissance Center', height: 35, color: '#0D47A1', stat: 'corporateResearch',
+        industrialCluster: [
+          { CorporateResearch: 'General Motors' },
+          { IndustrialRealEstate: 'Renaissance Center' },
+          { Manufacturing: 'Detroit Auto' }
+        ]
+      },
+      {
+        template: 'transitHub',
+        transitRef: 'Detroit People Mover',
+        name: 'Detroit Station', height: 12, color: '#607D8B', stat: 'transit',
+        industrialCluster: [
+          { Transit: 'Detroit People Mover' },
+          { Infrastructure: 'QLine Streetcar' },
+          { TransportationLogistics: 'Amtrak Detroit' }
+        ]
+      }
     ],
   },
 
@@ -424,6 +744,26 @@ export const SEED_CITIES = {
       { name: 'St. Edwards University',        lat: 30.2280, lon: -97.7540, rd_spending: 1.5e7, field: 'Social Sciences',patents: 5,   gradStudents: 800,  minorityLed: 42 },
     ],
 
+    techCenters: [
+      { name: 'Silicon Hills (Domain)', lat: 30.3983, lon: -97.7201, focus: 'Tech Campus', rdSpending: 2.7e9, patents: 340, startups: 210 },
+      { name: 'East Austin Innovation Zone', lat: 30.2677, lon: -97.7175, focus: 'Creative Tech', rdSpending: 4.2e8, patents: 78, startups: 95 },
+    ],
+
+    hospitals: [
+      { name: 'Dell Seton Medical Center', lat: 30.2657, lon: -97.7365, beds: 750, researchVolume: 2.5e8, traumaLevel: 1 },
+      { name: "St. David's Medical Center", lat: 30.2878, lon: -97.7402, beds: 600, researchVolume: 1.2e8, traumaLevel: 2 },
+    ],
+
+    financialDistricts: [
+      { name: 'Downtown Austin', lat: 30.2672, lon: -97.7431, focus: 'Corporate', dealFlow: 3.5e9, firms: 300 },
+      { name: 'Capital Factory', lat: 30.2630, lon: -97.7405, focus: 'Venture Capital', dealFlow: 2.8e9, firms: 150 },
+    ],
+
+    transitHubs: [
+      { name: 'Austin Station', lat: 30.2702, lon: -97.7390, mode: 'Rail', dailyRidership: 8000 },
+      { name: 'Austin-Bergstrom International Airport', lat: 30.1945, lon: -97.6699, mode: 'Air', dailyPassengers: 35000 },
+    ],
+
     ecosystemConnections: [
       { city: 'San Francisco', lat: 37.7749, lon: -122.4194, flowType: 'capital', volume: 0,    direction: 'bidirectional', dealValue: 1.2e9 },
       { city: 'Houston',       lat: 29.7604, lon: -95.3698,  flowType: 'capital', volume: 0,    direction: 'inbound',       dealValue: 5e8 },
@@ -440,15 +780,50 @@ export const SEED_CITIES = {
     planeCounts: {},
 
     landmarks: [
-      { template: 'comcastTower',    gridX: 0,    gridZ: 0,   name: 'Indeed Tower',         height: 38, color: '#0D47A1', stat: 'corporateResearch' },
-      { template: 'financialTower',  gridX: 80,   gridZ: -30, name: 'Capital Factory',      height: 32, color: '#FF8A00', stat: 'ventureCapital' },
-      { template: 'universityTower', gridX: -100, gridZ: 60,  name: 'UT Innovation Tower',  height: 30, color: '#00D1FF', stat: 'universityResearch' },
-      { template: 'transitHub',      gridX: 30,   gridZ: 140, name: 'Austin Station',       height: 16, color: '#607D8B', stat: 'transit' },
+      {
+        template: 'comcastTower',
+        financialRef: 'Downtown Austin',
+        name: 'Indeed Tower', height: 38, color: '#0D47A1', stat: 'corporateResearch',
+        industrialCluster: [
+          { CorporateResearch: 'Indeed' },
+          { TechTalent: 'Downtown Austin' },
+          { CommercialRealEstate: 'Congress Avenue' }
+        ]
+      },
+      {
+        template: 'financialTower',
+        financialRef: 'Capital Factory',
+        name: 'Capital Factory', height: 32, color: '#FF8A00', stat: 'ventureCapital',
+        industrialCluster: [
+          { VentureCapital: 'Capital Factory' },
+          { AngelInvestment: 'Austin Angels' },
+          { NewBusinesses: 'SXSW Startup Track' }
+        ]
+      },
+      {
+        template: 'universityTower',
+        universityRef: 'University of Texas at Austin',
+        name: 'UT Innovation Tower', height: 30, color: '#00D1FF', stat: 'universityResearch',
+        industrialCluster: [
+          { EducationResearch: 'University of Texas' },
+          { Patents: 'UT Austin OTC' },
+          { GraduateOutput: 'Dell Medical School' }
+        ]
+      },
+      {
+        template: 'transitHub',
+        transitRef: 'Austin Station',
+        name: 'Austin Station', height: 16, color: '#607D8B', stat: 'transit',
+        industrialCluster: [
+          { Transit: 'CapMetro Rail' },
+          { Infrastructure: 'Austin Bergstrom Airport' },
+          { TransportationLogistics: 'Lone Star Rail' }
+        ]
+      }
     ],
   },
 
   // ── WASHINGTON DC ────────────────────────────────────────────────────────
-  // Key is 'washington dc' but getCityData() matches 'washington' via prefix search
   'washington dc': {
     name: 'Washington DC', state: 'DC',
     lat: 38.9072, lon: -77.0369,
@@ -494,6 +869,26 @@ export const SEED_CITIES = {
       { name: 'American University',          lat: 38.9371, lon: -77.0868, rd_spending: 8e7,   field: 'Social Sciences',patents: 8,  gradStudents: 3200, minorityLed: 28 },
     ],
 
+    techCenters: [
+      { name: 'NoMa Innovation District', lat: 38.9050, lon: -77.0010, focus: 'GovTech', rdSpending: 1.5e9, patents: 95, startups: 110 },
+      { name: 'Southwest Waterfront Tech Hub', lat: 38.8785, lon: -77.0214, focus: 'Mixed-Use Tech', rdSpending: 6.2e8, patents: 42, startups: 65 },
+    ],
+
+    hospitals: [
+      { name: 'MedStar Washington Hospital Center', lat: 38.9283, lon: -77.0312, beds: 900, researchVolume: 2.1e8, traumaLevel: 1 },
+      { name: 'George Washington University Hospital', lat: 38.8997, lon: -77.0486, beds: 600, researchVolume: 1.8e8, traumaLevel: 2 },
+    ],
+
+    financialDistricts: [
+      { name: 'Federal Triangle', lat: 38.9072, lon: -77.0369, focus: 'Public Spending', dealFlow: 5e10, firms: 200 },
+      { name: 'The Wharf', lat: 38.8770, lon: -77.0215, focus: 'Real Estate', dealFlow: 2.5e9, firms: 80 },
+    ],
+
+    transitHubs: [
+      { name: 'Union Station', lat: 38.8977, lon: -77.0062, mode: 'Rail', dailyRidership: 90000, lines: ['Amtrak', 'MARC', 'Metro'] },
+      { name: 'Washington Dulles International Airport', lat: 38.9441, lon: -77.4559, mode: 'Air', dailyPassengers: 60000 },
+    ],
+
     ecosystemConnections: [
       { city: 'Baltimore',    lat: 39.2904, lon: -76.6122, flowType: 'talent',  volume: 3400, direction: 'inbound',       dealValue: 0 },
       { city: 'Wilmington',   lat: 39.7391, lon: -75.5398, flowType: 'talent',  volume: 800,  direction: 'bidirectional', dealValue: 0 },
@@ -510,10 +905,49 @@ export const SEED_CITIES = {
     planeCounts: { Baltimore: 8, Wilmington: 5, Philadelphia: 8 },
 
     landmarks: [
-      { template: 'comcastTower',    gridX: 0,   gridZ: 0,   name: 'Federal Core Tower',    height: 28, color: '#0D47A1', stat: 'publicSpending' },
-      { template: 'universityTower', gridX: -80, gridZ: 70,  name: 'Georgetown Research',   height: 25, color: '#00D1FF', stat: 'universityResearch' },
-      { template: 'universityTower', gridX: 70,  gridZ: -60, name: 'Howard Innovation Hub', height: 22, color: '#FF005C', stat: 'minorityOwned' },
-      { template: 'transitHub',      gridX: 20,  gridZ: 130, name: 'Union Station',         height: 18, color: '#607D8B', stat: 'transit' },
+      {
+        template: 'comcastTower',
+        financialRef: 'Federal Triangle',
+        name: 'Federal Core Tower', height: 28, color: '#0D47A1', stat: 'publicSpending',
+        industrialCluster: [
+          { PublicSpending: 'Federal Government' },
+          { Infrastructure: 'National Mall' },
+          { CommercialRealEstate: 'Federal Triangle' }
+        ]
+      },
+      {
+        template: 'universityTower',
+        universityRef: 'Georgetown University',
+        name: 'Georgetown Research', height: 25, color: '#00D1FF', stat: 'universityResearch',
+        industrialCluster: [
+          { EducationResearch: 'Georgetown University' },
+          { HealthLifeSciences: 'MedStar Health' },
+          { ProfessionalBusinessServices: 'Georgetown Law' }
+        ]
+      },
+      {
+        template: 'universityTower',
+        universityRef: 'Howard University',
+        name: 'Howard Innovation Hub', height: 22, color: '#FF005C', stat: 'minorityOwned',
+        industrialCluster: [
+          { MinorityOwned: 'Howard University' },
+          { EducationResearch: 'Howard Research' },
+          { CommunityBanking: 'OneUnited Bank' }
+        ]
+      },
+      {
+        template: 'transitHub',
+        transitRef: 'Union Station',
+        name: 'Union Station', height: 18, color: '#607D8B', stat: 'transit',
+        industrialCluster: [
+          { PublicSpending: 'Federal Core' },
+          { TransportationLogistics: 'Union Station' },
+          { ProfessionalBusinessServices: 'Georgetown' },
+          { EducationResearch: 'Howard University' },
+          { HealthLifeSciences: 'MedStar Health' },
+          { RealEstate: 'The Wharf' }
+        ]
+      }
     ],
   },
 
@@ -557,9 +991,38 @@ export const SEED_CITIES = {
     },
 
     universities: [
-      { name: 'University of Pennsylvania', lat: 39.9522, lon: -75.1932, rd_spending: 1.4e9, field: 'Medical/Health', patents: 280, gradStudents: 10000, minorityLed: 16 },
+      {
+        name: 'University of Pennsylvania',
+        lat: 39.95141731922913,
+        lon: -75.191745278456,
+        rd_spending: 1.4e9,
+        field: 'Medical/Health',
+        patents: 280,
+        gradStudents: 10000,
+        minorityLed: 16
+      },
       { name: 'Drexel University',          lat: 39.9566, lon: -75.1899, rd_spending: 3.5e8, field: 'Engineering/CS', patents: 55,  gradStudents: 5200,  minorityLed: 22 },
       { name: 'Temple University',          lat: 39.9812, lon: -75.1553, rd_spending: 2.8e8, field: 'Medical/Health', patents: 42,  gradStudents: 6500,  minorityLed: 28 },
+    ],
+
+    techCenters: [
+      { name: 'Navy Yard Tech Hub', lat: 39.8925, lon: -75.1785, focus: 'Advanced Manufacturing & Robotics', rdSpending: 2.2e8, patents: 45, startups: 120 },
+      { name: 'University City Science Center', lat: 39.9552, lon: -75.1927, focus: 'Biotech & Life Sciences', rdSpending: 3.5e8, patents: 78, startups: 85 },
+    ],
+
+    hospitals: [
+      { name: 'Hospital of the University of Pennsylvania', lat: 39.9505, lon: -75.1942, beds: 800, researchVolume: 1.4e9, traumaLevel: 1 },
+      { name: 'Jefferson University Hospital', lat: 39.9515, lon: -75.1549, beds: 700, researchVolume: 5.2e8, traumaLevel: 1 },
+    ],
+
+    financialDistricts: [
+      { name: 'Center City', lat: 39.9546, lon: -75.1682, focus: 'Corporate', dealFlow: 3.5e9, firms: 400 },
+      { name: 'VC Row', lat: 39.9506, lon: -75.1573, focus: 'Venture Capital', dealFlow: 1.2e9, firms: 60 },
+    ],
+
+    transitHubs: [
+      { name: '30th Street Station', lat: 39.9559, lon: -75.1823, mode: 'Rail', dailyRidership: 80000, lines: ['Amtrak', 'SEPTA', 'NJ Transit'] },
+      { name: 'Philadelphia International Airport', lat: 39.8720, lon: -75.2401, mode: 'Air', dailyPassengers: 70000 },
     ],
 
     ecosystemConnections: [
@@ -579,10 +1042,49 @@ export const SEED_CITIES = {
     planeCounts: { Baltimore: 6, Wilmington: 4, Washington: 8 },
 
     landmarks: [
-      { template: 'comcastTower',    gridX: 0,    gridZ: 0,   name: 'Comcast Center',      height: 42, color: '#0D47A1', stat: 'corporateResearch' },
-      { template: 'universityTower', gridX: -100, gridZ: 80,  name: 'Penn Medicine Tower', height: 35, color: '#00D1FF', stat: 'universityResearch' },
-      { template: 'financialTower',  gridX: 80,   gridZ: -40, name: 'VC Row',              height: 25, color: '#FF8A00', stat: 'ventureCapital' },
-      { template: 'transitHub',      gridX: -20,  gridZ: 140, name: '30th Street Station', height: 16, color: '#607D8B', stat: 'transit' },
+      {
+        template: 'comcastTower',
+        financialRef: 'Center City',
+        name: 'Comcast Center', height: 42, color: '#0D47A1', stat: 'corporateResearch',
+        industrialCluster: [
+          { CorporateResearch: 'Comcast' },
+          { TechTalent: 'Comcast Technology Center' },
+          { CommercialRealEstate: 'Center City' }
+        ]
+      },
+      {
+        template: 'universityTower',
+        universityRef: 'University of Pennsylvania',
+        name: 'Penn Medicine Tower', height: 35, color: '#00D1FF', stat: 'universityResearch',
+        industrialCluster: [
+          { EducationResearch: 'University of Pennsylvania' },
+          { HealthLifeSciences: 'Penn Medicine' },
+          { Patents: 'Penn Center for Innovation' }
+        ]
+      },
+      {
+        template: 'financialTower',
+        financialRef: 'VC Row',
+        name: 'VC Row', height: 25, color: '#FF8A00', stat: 'ventureCapital',
+        industrialCluster: [
+          { ProfessionalBusinessServices: 'Comcast Center' },
+          { VentureCapital: 'VC Row' },
+          { EducationResearch: 'University of Pennsylvania' },
+          { HealthLifeSciences: 'Penn Medicine' },
+          { TransportationLogistics: '30th Street Station' },
+          { Manufacturing: 'Navy Yard' }
+        ]
+      },
+      {
+        template: 'transitHub',
+        transitRef: '30th Street Station',
+        name: '30th Street Station', height: 16, color: '#607D8B', stat: 'transit',
+        industrialCluster: [
+          { Transit: '30th Street Station' },
+          { Infrastructure: 'SEPTA Regional Rail' },
+          { TransportationLogistics: 'Amtrak Northeast' }
+        ]
+      }
     ],
   },
 
@@ -632,6 +1134,26 @@ export const SEED_CITIES = {
       { name: 'CUNY Graduate Center', lat: 40.7486, lon: -73.9837, rd_spending: 2e8,   field: 'Social Sciences',patents: 35,  gradStudents: 5000,  minorityLed: 38 },
     ],
 
+    techCenters: [
+      { name: 'Cornell Tech Campus (Roosevelt Island)', lat: 40.7581, lon: -73.9505, focus: 'Applied Sciences', rdSpending: 4.5e8, patents: 122, startups: 70 },
+      { name: 'Silicon Alley (Flatiron)', lat: 40.7411, lon: -73.9915, focus: 'Digital Media & VC', rdSpending: 3.2e9, patents: 510, startups: 450 },
+    ],
+
+    hospitals: [
+      { name: 'NYU Langone Medical Center', lat: 40.7425, lon: -73.9731, beds: 1100, researchVolume: 2.5e9, traumaLevel: 1 },
+      { name: 'NewYork-Presbyterian Hospital', lat: 40.7644, lon: -73.9561, beds: 2600, researchVolume: 3.2e9, traumaLevel: 1 },
+    ],
+
+    financialDistricts: [
+      { name: 'Wall Street', lat: 40.7069, lon: -74.0092, focus: 'Banking & Finance', dealFlow: 5e11, firms: 1500 },
+      { name: 'Midtown VC Hub', lat: 40.7551, lon: -73.9844, focus: 'Venture Capital', dealFlow: 2.5e10, firms: 300 },
+    ],
+
+    transitHubs: [
+      { name: 'Grand Central Terminal', lat: 40.7527, lon: -73.9772, mode: 'Rail', dailyRidership: 750000, lines: ['Metro-North', 'Subway'] },
+      { name: 'Penn Station', lat: 40.7506, lon: -73.9934, mode: 'Rail', dailyRidership: 600000, lines: ['Amtrak', 'LIRR', 'NJ Transit'] },
+    ],
+
     ecosystemConnections: [
       { city: 'Boston',        lat: 42.3601, lon: -71.0589,  flowType: 'capital', volume: 0, direction: 'bidirectional', dealValue: 2.5e9 },
       { city: 'San Francisco', lat: 37.7749, lon: -122.4194, flowType: 'capital', volume: 0, direction: 'bidirectional', dealValue: 2.8e9 },
@@ -647,12 +1169,66 @@ export const SEED_CITIES = {
     planeCounts: { Boston: 25, 'San Francisco': 28, Philadelphia: 12 },
 
     landmarks: [
-      { template: 'comcastTower',    gridX: 0,    gridZ: 0,    name: 'One World Trade',         height: 52, color: '#0D47A1', stat: 'corporateResearch' },
-      { template: 'financialTower',  gridX: -50,  gridZ: 30,   name: 'Wall Street District',    height: 48, color: '#FF8A00', stat: 'ventureCapital' },
-      { template: 'financialTower',  gridX: 60,   gridZ: -20,  name: 'Midtown VC Hub',          height: 45, color: '#FF6D00', stat: 'privateEquity' },
-      { template: 'universityTower', gridX: -120, gridZ: 100,  name: 'Columbia Research Tower', height: 38, color: '#00D1FF', stat: 'universityResearch' },
-      { template: 'hospitalComplex', gridX: 100,  gridZ: 80,   name: 'NYU Langone Medical',     height: 35, color: '#E91E63', stat: 'healthcareTalent' },
-      { template: 'transitHub',      gridX: -20,  gridZ: 180,  name: 'Grand Central',           height: 22, color: '#607D8B', stat: 'transit' },
+      {
+        template: 'comcastTower',
+        financialRef: 'Wall Street',
+        name: 'One World Trade', height: 52, color: '#0D47A1', stat: 'corporateResearch',
+        industrialCluster: [
+          { CorporateResearch: 'One World Trade' },
+          { CommercialRealEstate: 'Financial District' },
+          { ProfessionalBusinessServices: 'Lower Manhattan' }
+        ]
+      },
+      {
+        template: 'financialTower',
+        financialRef: 'Wall Street',
+        name: 'Wall Street District', height: 48, color: '#FF8A00', stat: 'ventureCapital',
+        industrialCluster: [
+          { VentureCapital: 'Union Square Ventures' },
+          { PrivateEquity: 'Blackstone' },
+          { BankLending: 'Goldman Sachs' }
+        ]
+      },
+      {
+        template: 'financialTower',
+        techCenterRef: 'Silicon Alley (Flatiron)',
+        name: 'Midtown VC Hub', height: 45, color: '#FF6D00', stat: 'privateEquity',
+        industrialCluster: [
+          { PrivateEquity: 'KKR' },
+          { VentureCapital: 'Thrive Capital' },
+          { AngelInvestment: 'NYC Angels' }
+        ]
+      },
+      {
+        template: 'universityTower',
+        universityRef: 'Columbia University',
+        name: 'Columbia Research Tower', height: 38, color: '#00D1FF', stat: 'universityResearch',
+        industrialCluster: [
+          { EducationResearch: 'Columbia University' },
+          { HealthLifeSciences: 'Columbia Medical Center' },
+          { Patents: 'Columbia Technology Ventures' }
+        ]
+      },
+      {
+        template: 'hospitalComplex',
+        hospitalRef: 'NYU Langone Medical Center',
+        name: 'NYU Langone Medical', height: 35, color: '#E91E63', stat: 'healthcareTalent',
+        industrialCluster: [
+          { HealthLifeSciences: 'NYU Langone' },
+          { MedicalResearch: 'Perlmutter Cancer Center' },
+          { Biotech: 'Alexandria Center' }
+        ]
+      },
+      {
+        template: 'transitHub',
+        transitRef: 'Grand Central Terminal',
+        name: 'Grand Central', height: 22, color: '#607D8B', stat: 'transit',
+        industrialCluster: [
+          { Transit: 'Grand Central Terminal' },
+          { Infrastructure: 'Metro-North Railroad' },
+          { TransportationLogistics: 'MTA Subway' }
+        ]
+      }
     ],
   },
 
@@ -702,6 +1278,26 @@ export const SEED_CITIES = {
       { name: 'Illinois Institute of Technology', lat: 41.8349, lon: -87.6270, rd_spending: 1.2e8, field: 'Engineering/CS',patents: 40,  gradStudents: 2800, minorityLed: 25 },
     ],
 
+    techCenters: [
+      { name: '1871 (Merchandise Mart)', lat: 41.8881, lon: -87.6352, focus: 'Tech Incubator', rdSpending: 1.8e8, patents: 32, startups: 450 },
+      { name: 'Fulton Market Innovation District', lat: 41.8867, lon: -87.6479, focus: 'Tech & Design', rdSpending: 3.1e8, patents: 67, startups: 210 },
+    ],
+
+    hospitals: [
+      { name: 'Northwestern Memorial Hospital', lat: 41.8955, lon: -87.6219, beds: 900, researchVolume: 1.2e9, traumaLevel: 1 },
+      { name: 'University of Chicago Medical Center', lat: 41.7886, lon: -87.5987, beds: 800, researchVolume: 9e8, traumaLevel: 1 },
+    ],
+
+    financialDistricts: [
+      { name: 'The Loop', lat: 41.8789, lon: -87.6359, focus: 'Corporate', dealFlow: 1.5e10, firms: 800 },
+      { name: 'Chicago Mercantile', lat: 41.8827, lon: -87.6295, focus: 'Derivatives & Trading', dealFlow: 5e12, firms: 100 },
+    ],
+
+    transitHubs: [
+      { name: 'Union Station', lat: 41.8787, lon: -87.6400, mode: 'Rail', dailyRidership: 120000 },
+      { name: "O'Hare International Airport", lat: 41.9742, lon: -87.9073, mode: 'Air', dailyPassengers: 240000 },
+    ],
+
     ecosystemConnections: [
       { city: 'New York', lat: 40.7128, lon: -74.0060, flowType: 'capital', volume: 0, direction: 'bidirectional', dealValue: 1.5e9 },
       { city: 'Detroit',  lat: 42.3314, lon: -83.0458, flowType: 'capital', volume: 0, direction: 'outbound',      dealValue: 4e7 },
@@ -717,10 +1313,46 @@ export const SEED_CITIES = {
     planeCounts: { 'New York': 18, Detroit: 8 },
 
     landmarks: [
-      { template: 'comcastTower',    gridX: 0,    gridZ: 0,    name: 'Willis Tower',           height: 48, color: '#0D47A1', stat: 'corporateResearch' },
-      { template: 'financialTower',  gridX: -40,  gridZ: 50,   name: 'Chicago Mercantile',     height: 42, color: '#FF8A00', stat: 'ventureCapital' },
-      { template: 'universityTower', gridX: 120,  gridZ: -80,  name: 'Northwestern Research',  height: 35, color: '#00D1FF', stat: 'universityResearch' },
-      { template: 'transitHub',      gridX: 30,   gridZ: 160,  name: 'Union Station Chicago',  height: 20, color: '#607D8B', stat: 'transit' },
+      {
+        template: 'comcastTower',
+        financialRef: 'The Loop',
+        name: 'Willis Tower', height: 48, color: '#0D47A1', stat: 'corporateResearch',
+        industrialCluster: [
+          { CorporateResearch: 'United Airlines' },
+          { CommercialRealEstate: 'Loop' },
+          { ProfessionalBusinessServices: 'Willis Tower' }
+        ]
+      },
+      {
+        template: 'financialTower',
+        financialRef: 'Chicago Mercantile',
+        name: 'Chicago Mercantile', height: 42, color: '#FF8A00', stat: 'ventureCapital',
+        industrialCluster: [
+          { VentureCapital: 'Pritzker Group' },
+          { PrivateEquity: 'Madison Dearborn' },
+          { BankLending: 'CME Group' }
+        ]
+      },
+      {
+        template: 'universityTower',
+        universityRef: 'Northwestern University',
+        name: 'Northwestern Research', height: 35, color: '#00D1FF', stat: 'universityResearch',
+        industrialCluster: [
+          { EducationResearch: 'Northwestern University' },
+          { HealthLifeSciences: 'Northwestern Medicine' },
+          { Patents: 'INVO' }
+        ]
+      },
+      {
+        template: 'transitHub',
+        transitRef: 'Union Station',
+        name: 'Union Station Chicago', height: 20, color: '#607D8B', stat: 'transit',
+        industrialCluster: [
+          { Transit: 'Union Station' },
+          { Infrastructure: 'Metra' },
+          { TransportationLogistics: 'Amtrak Chicago' }
+        ]
+      }
     ],
   },
 
@@ -768,6 +1400,26 @@ export const SEED_CITIES = {
       { name: 'Widener University',     lat: 39.8327, lon: -75.3991, rd_spending: 6e7,   field: 'Engineering/CS', patents: 9,  gradStudents: 900,  minorityLed: 22 },
     ],
 
+    techCenters: [
+      { name: 'Wilmington Fintech District', lat: 39.7345, lon: -75.5432, focus: 'Fintech', rdSpending: 1.1e8, patents: 25, startups: 70 },
+      { name: 'Delaware Innovation Space', lat: 39.7902, lon: -75.5604, focus: 'ChemTech', rdSpending: 5.2e7, patents: 18, startups: 25 },
+    ],
+
+    hospitals: [
+      { name: 'Christiana Hospital', lat: 39.7060, lon: -75.5970, beds: 1100, researchVolume: 1.5e8, traumaLevel: 1 },
+      { name: 'St. Francis Hospital', lat: 39.7475, lon: -75.5485, beds: 300, researchVolume: 2.5e7, traumaLevel: 3 },
+    ],
+
+    financialDistricts: [
+      { name: 'Rodney Square', lat: 39.7391, lon: -75.5398, focus: 'Corporate & Legal', dealFlow: 1.2e10, firms: 200 },
+      { name: 'Riverfront', lat: 39.7325, lon: -75.5421, focus: 'Fintech', dealFlow: 3.5e9, firms: 50 },
+    ],
+
+    transitHubs: [
+      { name: 'Amtrak Station', lat: 39.7358, lon: -75.5511, mode: 'Rail', dailyRidership: 15000 },
+      { name: 'Wilmington Airport', lat: 39.6800, lon: -75.6028, mode: 'Air', dailyPassengers: 2000 },
+    ],
+
     ecosystemConnections: [
       { city: 'Philadelphia', lat: 39.9526, lon: -75.1652, flowType: 'talent',  volume: 2900, direction: 'outbound', dealValue: 0 },
       { city: 'Baltimore',    lat: 39.2904, lon: -76.6122, flowType: 'capital', volume: 0,    direction: 'inbound',  dealValue: 4.2e7 },
@@ -783,9 +1435,39 @@ export const SEED_CITIES = {
     planeCounts: { Philadelphia: 8, Baltimore: 5 },
 
     landmarks: [
-      { template: 'comcastTower',   gridX: 0,   gridZ: 0,  name: 'Wilmington Trust Tower', height: 22, color: '#0D47A1', stat: 'corporateResearch' },
-      { template: 'financialTower', gridX: 60,  gridZ: -30,name: 'Fintech District',       height: 20, color: '#FF8A00', stat: 'ventureCapital' },
-      { template: 'transitHub',     gridX: -30, gridZ: 90, name: 'Amtrak Station',         height: 12, color: '#607D8B', stat: 'transit' },
+      {
+        template: 'comcastTower',
+        financialRef: 'Rodney Square',
+        name: 'Wilmington Trust Tower', height: 22, color: '#0D47A1', stat: 'corporateResearch',
+        industrialCluster: [
+          { CorporateResearch: 'Wilmington Trust' },
+          { CommercialRealEstate: 'Rodney Square' },
+          { ProfessionalBusinessServices: 'Delaware Corporate Law' }
+        ]
+      },
+      {
+        template: 'financialTower',
+        techCenterRef: 'Wilmington Fintech District',
+        name: 'Fintech District', height: 20, color: '#FF8A00', stat: 'ventureCapital',
+        industrialCluster: [
+          { FintechBanking: 'Wilmington Trust Tower' },
+          { LegalRegulatory: 'Chancery Court' },
+          { ProfessionalBusinessServices: 'Fintech District' },
+          { RealEstate: 'Riverfront' },
+          { TransportationLogistics: 'Amtrak Station' },
+          { EducationResearch: 'University of Delaware' }
+        ]
+      },
+      {
+        template: 'transitHub',
+        transitRef: 'Amtrak Station',
+        name: 'Amtrak Station', height: 12, color: '#607D8B', stat: 'transit',
+        industrialCluster: [
+          { Transit: 'Amtrak Station' },
+          { Infrastructure: 'Wilmington Riverfront' },
+          { TransportationLogistics: 'SEPTA Wilmington' }
+        ]
+      }
     ],
   },
 };
@@ -794,8 +1476,6 @@ export const SEED_CITIES = {
 export const DEFAULT_CITY = SEED_CITIES.baltimore;
 
 // ── Primary lookup ────────────────────────────────────────────────────────
-// Handles 'Washington' → 'washington dc' via prefix match,
-// 'San Francisco' → 'san francisco', and direct hits.
 export function getCityData(cityName) {
   if (!cityName) return DEFAULT_CITY;
   const key = cityName.toLowerCase().trim();
@@ -805,7 +1485,6 @@ export function getCityData(cityName) {
   return match ? SEED_CITIES[match] : DEFAULT_CITY;
 }
 
-// Backward-compatible alias used by LivingEcosystem and any existing callers.
 export const getSeedCity = getCityData;
 
 // ── Economic stat → hex color ─────────────────────────────────────────────
@@ -821,7 +1500,6 @@ const STAT_COLORS = {
 };
 export function getStatColor(statKey) { return STAT_COLORS[statKey] ?? '#B0BEC5'; }
 
-// ── Percentile label ──────────────────────────────────────────────────────
 export function getPercentileLabel(p) {
   if (p >= 90) return 'Exceptional';
   if (p >= 75) return 'Very High';

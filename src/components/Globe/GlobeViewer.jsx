@@ -31,15 +31,8 @@ export default function GlobeViewer({ mode = 'foreground' }) {
   const setViewer = useMapStore((s) => s.setViewer);
 
   useEffect(() => {
-    const token = import.meta.env.VITE_CESIUM_ION_TOKEN;
-    if (token) Cesium.Ion.defaultAccessToken = token;
-
     if (import.meta.env.DEV) {
-      console.info(
-        token
-          ? `[GlobeViewer] Cesium Ion token loaded (${token.length} chars)`
-          : '[GlobeViewer] No Ion token — restart `npm run dev` after editing .env. Using OSM fallback imagery.'
-      );
+      console.info('[GlobeViewer] Using CartoDB Voyager basemap; Cesium Ion token is not required.');
     }
 
     const viewer = new Cesium.Viewer(containerRef.current, {
@@ -74,36 +67,27 @@ export default function GlobeViewer({ mode = 'foreground' }) {
       US_BOUNDS.north
     );
 
-    // Always lay down a token-free OpenStreetMap base so the globe
-    // surface is never black — not when the token is missing, and not
-    // when it's present but lacks asset permissions.
+    // Token-free labelled basemap. If CartoDB tiles fail, fall back to
+    // OpenStreetMap so the globe remains usable without Cesium Ion.
     viewer.imageryLayers.removeAll();
-    viewer.imageryLayers.addImageryProvider(
-      new Cesium.UrlTemplateImageryProvider({
-        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-        credit: '© OpenStreetMap contributors',
-        maximumLevel: 19,
-      })
-    );
-
-    // With a token, layer Cesium World Imagery (aerial) on top and load
-    // world terrain. If either request fails — bad token, no asset
-    // access, offline — the OSM base + ellipsoid terrain remain, so the
-    // map still renders.
-    if (token) {
-      Cesium.IonImageryProvider.fromAssetId(2)
-        .then((provider) => {
-          if (!viewer.isDestroyed()) {
-            viewer.imageryLayers.addImageryProvider(provider);
-          }
-        })
-        .catch(() => {});
-      Cesium.createWorldTerrainAsync()
-        .then((terrain) => {
-          if (!viewer.isDestroyed()) viewer.terrainProvider = terrain;
-        })
-        .catch(() => {});
-    }
+    const fallbackProvider = () => new Cesium.UrlTemplateImageryProvider({
+      url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      credit: '© OpenStreetMap contributors',
+      maximumLevel: 19,
+    });
+    const cartoProvider = new Cesium.UrlTemplateImageryProvider({
+      url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+      subdomains: ['a', 'b', 'c', 'd'],
+      credit: '© CartoDB / OpenStreetMap contributors',
+    });
+    let usedFallback = false;
+    cartoProvider.errorEvent.addEventListener(() => {
+      if (usedFallback || viewer.isDestroyed()) return;
+      usedFallback = true;
+      viewer.imageryLayers.removeAll();
+      viewer.imageryLayers.addImageryProvider(fallbackProvider());
+    });
+    viewer.imageryLayers.addImageryProvider(cartoProvider);
 
     // Dev-only guard: if the camera ever ends up below the geoid, warn.
     if (import.meta.env.DEV) {
