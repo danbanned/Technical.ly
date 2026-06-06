@@ -31,12 +31,15 @@ import { SHAPE_REGISTRY } from '../../utils/buildingShapes';
  * ─────────────────────────────────────────────────────────────────────────
  */
 
-// ── Scale constants ────────────────────────────────────────────────────────
-const BLOCK_SCALE   = 3;    // meters per voxel unit — heights in the zone rules
-const PLOT_SIZE     = 20;   // meters per building plot (building + road gap)
-const ROAD_GAP      = 8;    // meters reserved for the road (building = PLOT_SIZE - ROAD_GAP)
-const CITY_RADIUS   = 600;  // meters from city center
-const CHUNK_SIZE    = 200;  // meters per generation chunk
+const BLOCK_SCALE   = 3;     // unchanged
+const PLOT_SIZE     = 100;   // grid spacing — bigger = buildings sit farther apart (was 60)
+const ROAD_GAP      = 24;    // was 8  → 24
+const CITY_RADIUS   = 2800;  // city extent — bigger = city sprawls across more map (was 1800)
+const CHUNK_SIZE    = 1000;  // raised with PLOT_SIZE so each chunk still holds a full grid (was 600)
+const HEIGHT_BOOST  = 5;     // ← vertical exaggeration so buildings "pop" out of the earth
+                             //    Tune: 2–2.5 = subtle, 3.5 = dramatic, 5 = towering.
+
+
 
 // ── Economic color map ──────────────────────────────────────────────────────
 // Every building gets one color = one specific economic statistic.
@@ -67,22 +70,27 @@ const ECON = {
 
 // ── Zone rules ─────────────────────────────────────────────────────────────
 // minH/maxH in voxel units (×BLOCK_SCALE for meters). roadW in meters.
+
+// ── Zone rules (minH/maxH/plotSize/roadW scaled) ──────────────────────────
+// plotSize = building footprint thickness (raised so towers read as chunky blocks).
 const ZONES = {
-  downtown:    { plotSize: 24, roadW: 10, minH: 10, maxH: 50, density: 0.85, roof: 'antenna',   dominant: ['ventureCapital','corporateResearch','techTalent','privateEquity'] },
-  innovation:  { plotSize: 22, roadW: 8,  minH: 7,  maxH: 38, density: 0.72, roof: 'stepped',  dominant: ['universityResearch','patents','techTalent','graduateOutput'] },
-  commercial:  { plotSize: 20, roadW: 8,  minH: 5,  maxH: 22, density: 0.75, roof: 'flat',     dominant: ['smallBusiness','bankLending','commercialRealEstate','newBusinesses'] },
-  residential: { plotSize: 18, roadW: 6,  minH: 2,  maxH: 10, density: 0.65, roof: 'peaked',   dominant: ['residentialRealEstate','minorityOwned','womenOwned','affordableHousing'] },
-  industrial:  { plotSize: 24, roadW: 10, minH: 3,  maxH: 12, density: 0.55, roof: 'flat',     dominant: ['industrialRealEstate','publicSpending','transit'] },
+  downtown:    { plotSize: 84, roadW: 30, minH: 30, maxH: 150, density: 0.85, roof: 'antenna',  dominant: ['ventureCapital','corporateResearch','techTalent','privateEquity'] },
+  innovation:  { plotSize: 78, roadW: 24, minH: 21, maxH: 114, density: 0.72, roof: 'stepped', dominant: ['universityResearch','patents','techTalent','graduateOutput'] },
+  commercial:  { plotSize: 72, roadW: 24, minH: 15, maxH: 66,  density: 0.75, roof: 'flat',    dominant: ['smallBusiness','bankLending','commercialRealEstate','newBusinesses'] },
+  residential: { plotSize: 64, roadW: 18, minH: 6,  maxH: 30,  density: 0.65, roof: 'peaked',  dominant: ['residentialRealEstate','minorityOwned','womenOwned','affordableHousing'] },
+  industrial:  { plotSize: 84, roadW: 30, minH: 9,  maxH: 36,  density: 0.55, roof: 'flat',    dominant: ['industrialRealEstate','publicSpending','transit'] },
 };
+
 
 // ── Landmark template → shape/footprint spec ───────────────────────────────
 // Maps seedCityData landmark.template names to rendering params.
+// ── Landmark templates (footprint widths scaled) ──────────────────────────
 const TEMPLATE_MAP = {
-  comcastTower:    { shapeKey: 'blade_bullet',     footW: 32 },
-  universityTower: { shapeKey: 'spired_futurist',  footW: 28 },
-  financialTower:  { shapeKey: 'tiered_blade',     footW: 28 },
-  hospitalComplex: { shapeKey: 'terraced_midrise', footW: 40 },
-  transitHub:      { shapeKey: 'monolithic_slab',  footW: 50 },
+  comcastTower:    { shapeKey: 'blade_bullet',     footW: 96  },  // was 32
+  universityTower: { shapeKey: 'spired_futurist',  footW: 84  },  // was 28
+  financialTower:  { shapeKey: 'tiered_blade',     footW: 84  },  // was 28
+  hospitalComplex: { shapeKey: 'terraced_midrise', footW: 120 },  // was 40
+  transitHub:      { shapeKey: 'monolithic_slab',  footW: 150 },  // was 50
 };
 
 // ── Seeded RNG ─────────────────────────────────────────────────────────────
@@ -309,8 +317,9 @@ export default function FakeCityGenerator() {
             if (rng() > rules.density) continue;
 
             // Height: noise-driven within zone limits (voxel units → meters)
+            // × HEIGHT_BOOST so buildings pop dramatically out of the earth.
             const n = noise(gx * 0.05, gz * 0.05);
-            const height = (rules.minH + n * (rules.maxH - rules.minH)) * BLOCK_SCALE;
+            const height = (rules.minH + n * (rules.maxH - rules.minH)) * BLOCK_SCALE * HEIGHT_BOOST;
 
             const stat = pickStat(zone, rng, cityStatsRef.current);
             const hex  = ECON[stat]?.hex ?? '#B0BEC5';
@@ -334,7 +343,7 @@ export default function FakeCityGenerator() {
             });
             buildRef.current.push(entity);
 
-            // Peaked roof cap on residential buildings
+            // Peaked roof cap on residential buildings (cap thickness scaled to boost)
             if (rules.roof === 'peaked' && height > 9) {
               const roof = shrink(fp, 0.7);
               buildRef.current.push(viewer.entities.add({
@@ -342,14 +351,14 @@ export default function FakeCityGenerator() {
                 polygon: {
                   hierarchy: toH(roof),
                   height,
-                  extrudedHeight: height + 4,
+                  extrudedHeight: height + 4 * HEIGHT_BOOST,
                   material: Cesium.Color.fromCssColorString('#5D4037').withAlpha(0.9),
                 },
               }));
             }
 
-            // Antenna on tall downtown/innovation buildings
-            if ((rules.roof === 'antenna' || rules.roof === 'stepped') && height > 60) {
+            // Antenna on tall downtown/innovation buildings (height threshold & length scaled)
+            if ((rules.roof === 'antenna' || rules.roof === 'stepped') && height > 60 * HEIGHT_BOOST) {
               const mid = C.toLonLat(gx, gz);
               const ant = [
                 mid.lon - 0.00003, mid.lat - 0.00003,
@@ -362,7 +371,7 @@ export default function FakeCityGenerator() {
                 polygon: {
                   hierarchy: toH(ant),
                   height,
-                  extrudedHeight: height + 10,
+                  extrudedHeight: height + 10 * HEIGHT_BOOST,
                   material: Cesium.Color.RED.withAlpha(0.85),
                 },
               }));
@@ -458,7 +467,8 @@ export default function FakeCityGenerator() {
       if (!grid) continue;
       const { gx, gz, lat, lon } = grid;
 
-      const height = lm.height * BLOCK_SCALE;
+      // × HEIGHT_BOOST so landmark towers tower over the skyline.
+      const height = lm.height * BLOCK_SCALE * HEIGHT_BOOST;
       const fp     = rectFootprint(C, gx, gz, spec.footW, spec.footW);
 
       renderShape(
@@ -501,7 +511,7 @@ export default function FakeCityGenerator() {
       // Floating label
       buildRef.current.push(viewer.entities.add({
         name: `LM — ${lm.name} label`,
-        position: Cesium.Cartesian3.fromDegrees(lon, lat, signBase + panelH + 8),
+        position: Cesium.Cartesian3.fromDegrees(lon, lat, signBase + panelH + 21),
         label: {
           text: lm.name,
           font: 'bold 13px Inter, Arial, sans-serif',
@@ -601,18 +611,18 @@ export default function FakeCityGenerator() {
       for (let i = 0; i < 3; i++) {
         const ang = (i * 120 + 30) * Math.PI / 180;
         const r = 80 + rng() * 40;
-        renderShape(SHAPE_REGISTRY.modular_lowrise, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 16, 20), 6 + rng() * 10, '#455A64', buildRef.current, viewer, `SAT — ${lm.name} training`);
+        renderShape(SHAPE_REGISTRY.modular_lowrise, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 16, 20), (6 + rng() * 10) * HEIGHT_BOOST, '#455A64', buildRef.current, viewer, `SAT — ${lm.name} training`);
       }
       for (let i = 0; i < 4; i++) {
         const ang = (i * 90 + 45 + (rng() - 0.5) * 30) * Math.PI / 180;
         const r = 120 + rng() * 40;
         const hexes = ['#37474F', '#455A64', '#546E7A', '#607D8B'];
-        renderShape(SHAPE_REGISTRY.stepback_highrise, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 18, 22), 8 + rng() * 14, hexes[i % 4], buildRef.current, viewer, `SAT — ${lm.name} housing`);
+        renderShape(SHAPE_REGISTRY.stepback_highrise, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 18, 22), (8 + rng() * 14) * HEIGHT_BOOST, hexes[i % 4], buildRef.current, viewer, `SAT — ${lm.name} housing`);
       }
       for (let i = 0; i < 5; i++) {
         const ang = (i * 72 + rng() * 20) * Math.PI / 180;
         const r = 140 + rng() * 40;
-        renderShape(SHAPE_REGISTRY.gable_house, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 12, 14), 4 + rng() * 5, '#5D4037', buildRef.current, viewer, `SAT — ${lm.name} retail`);
+        renderShape(SHAPE_REGISTRY.gable_house, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 12, 14), (4 + rng() * 5) * HEIGHT_BOOST, '#5D4037', buildRef.current, viewer, `SAT — ${lm.name} retail`);
       }
 
       // ── Template-specific satellites ────────────────────────────────
@@ -620,51 +630,51 @@ export default function FakeCityGenerator() {
         for (let i = 0; i < 3; i++) {
           const ang = (i * 120 + 15) * Math.PI / 180;
           const r = 100 + rng() * 40;
-          renderShape(SHAPE_REGISTRY.cylindrical_crown, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 20, 20), 12 + rng() * 16, '#0D47A1', buildRef.current, viewer, `SAT — ${lm.name} supplier`);
+          renderShape(SHAPE_REGISTRY.cylindrical_crown, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 20, 20), (12 + rng() * 16) * HEIGHT_BOOST, '#0D47A1', buildRef.current, viewer, `SAT — ${lm.name} supplier`);
         }
         for (let i = 0; i < 2; i++) {
           const ang = (i * 180 + 60) * Math.PI / 180;
           const r = 100 + rng() * 50;
-          renderShape(SHAPE_REGISTRY.slab_skyscraper, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 14, 28), 10 + rng() * 12, '#455A64', buildRef.current, viewer, `SAT — ${lm.name} lowwage`);
+          renderShape(SHAPE_REGISTRY.slab_skyscraper, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 14, 28), (10 + rng() * 12) * HEIGHT_BOOST, '#455A64', buildRef.current, viewer, `SAT — ${lm.name} lowwage`);
         }
       } else if (lm.template === 'universityTower') {
         for (let i = 0; i < 3; i++) {
           const ang = (i * 120 + 20) * Math.PI / 180;
           const r = 100 + rng() * 40;
-          renderShape(SHAPE_REGISTRY.segmented_tower, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 18, 18), 14 + rng() * 18, '#00B8D4', buildRef.current, viewer, `SAT — ${lm.name} spinoff`);
+          renderShape(SHAPE_REGISTRY.segmented_tower, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 18, 18), (14 + rng() * 18) * HEIGHT_BOOST, '#00B8D4', buildRef.current, viewer, `SAT — ${lm.name} spinoff`);
         }
         for (let i = 0; i < 2; i++) {
           const ang = (i * 180 + 70) * Math.PI / 180;
           const r = 120 + rng() * 40;
-          renderShape(SHAPE_REGISTRY.pagoda_tower, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 16, 16), 12 + rng() * 14, '#E040FB', buildRef.current, viewer, `SAT — ${lm.name} inclusive`);
+          renderShape(SHAPE_REGISTRY.pagoda_tower, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 16, 16), (12 + rng() * 14) * HEIGHT_BOOST, '#E040FB', buildRef.current, viewer, `SAT — ${lm.name} inclusive`);
         }
       } else if (lm.template === 'hospitalComplex') {
         for (let i = 0; i < 3; i++) {
           const ang = (i * 120 + 10) * Math.PI / 180;
           const r = 100 + rng() * 30;
-          renderShape(SHAPE_REGISTRY.stepback_highrise, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 20, 24), 16 + rng() * 20, '#E91E63', buildRef.current, viewer, `SAT — ${lm.name} workforce`);
+          renderShape(SHAPE_REGISTRY.stepback_highrise, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 20, 24), (16 + rng() * 20) * HEIGHT_BOOST, '#E91E63', buildRef.current, viewer, `SAT — ${lm.name} workforce`);
         }
         for (let i = 0; i < 2; i++) {
           const ang = (i * 180 + 45) * Math.PI / 180;
           const r = 110 + rng() * 40;
-          renderShape(SHAPE_REGISTRY.spired_futurist, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 16, 16), 20 + rng() * 20, '#F06292', buildRef.current, viewer, `SAT — ${lm.name} biotech`);
+          renderShape(SHAPE_REGISTRY.spired_futurist, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 16, 16), (20 + rng() * 20) * HEIGHT_BOOST, '#F06292', buildRef.current, viewer, `SAT — ${lm.name} biotech`);
         }
       } else if (lm.template === 'financialTower') {
         for (let i = 0; i < 3; i++) {
           const ang = (i * 120 + 30) * Math.PI / 180;
           const r = 100 + rng() * 40;
-          renderShape(SHAPE_REGISTRY.pagoda_tower, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 18, 18), 16 + rng() * 18, '#FF005C', buildRef.current, viewer, `SAT — ${lm.name} minority`);
+          renderShape(SHAPE_REGISTRY.pagoda_tower, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 18, 18), (16 + rng() * 18) * HEIGHT_BOOST, '#FF005C', buildRef.current, viewer, `SAT — ${lm.name} minority`);
         }
         for (let i = 0; i < 2; i++) {
           const ang = (i * 180 + 80) * Math.PI / 180;
           const r = 120 + rng() * 40;
-          renderShape(SHAPE_REGISTRY.lowrise_compound, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 22, 22), 8 + rng() * 10, '#FF8A00', buildRef.current, viewer, `SAT — ${lm.name} community`);
+          renderShape(SHAPE_REGISTRY.lowrise_compound, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 22, 22), (8 + rng() * 10) * HEIGHT_BOOST, '#FF8A00', buildRef.current, viewer, `SAT — ${lm.name} community`);
         }
       } else if (lm.template === 'transitHub') {
         for (let i = 0; i < 6; i++) {
           const ang = (i * 60) * Math.PI / 180;
           const r = 80 + rng() * 60;
-          renderShape(SHAPE_REGISTRY.modular_lowrise, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 20, 20), 10 + rng() * 18, '#607D8B', buildRef.current, viewer, `SAT — ${lm.name} TOD`);
+          renderShape(SHAPE_REGISTRY.modular_lowrise, rectFootprint(C, gx + Math.cos(ang) * r, gz + Math.sin(ang) * r, 20, 20), (10 + rng() * 18) * HEIGHT_BOOST, '#607D8B', buildRef.current, viewer, `SAT — ${lm.name} TOD`);
         }
       }
     }

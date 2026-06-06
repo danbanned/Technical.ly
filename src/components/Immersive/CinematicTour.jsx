@@ -20,6 +20,13 @@ const REF_LOOKUPS = [
   ['transitRef', 'transitHubs'],
 ];
 
+// ── Scale constants — MUST match FakeCityGenerator ────────────────────────
+// Landmark towers render at lm.height * BLOCK_SCALE * HEIGHT_BOOST.
+// The tour must use the same factor so camera framing matches the real towers.
+const BLOCK_SCALE  = 3;
+const HEIGHT_BOOST = 5;
+const TOWER_SCALE  = BLOCK_SCALE * HEIGHT_BOOST; // = 15 (was effectively 3 before the boost)
+
 function gridToWorld(cityData, gridX, gridZ) {
   const metersPerDegLat = 111320;
   const metersPerDegLon = metersPerDegLat * Math.cos(cityData.lat * Math.PI / 180);
@@ -36,7 +43,7 @@ function resolveLandmarkCoordinates(cityData, landmark) {
     return {
       lat: landmark.lat,
       lon: landmark.lon,
-      height: (landmark.height || 30) * 3,
+      height: (landmark.height || 30) * TOWER_SCALE,
       name: landmark.name,
     };
   }
@@ -50,7 +57,7 @@ function resolveLandmarkCoordinates(cityData, landmark) {
       return {
         lat: target.lat,
         lon: target.lon,
-        height: (landmark.height || 30) * 3,
+        height: (landmark.height || 30) * TOWER_SCALE,
         name: landmark.name,
       };
     }
@@ -59,7 +66,7 @@ function resolveLandmarkCoordinates(cityData, landmark) {
   if (landmark.gridX !== undefined && landmark.gridZ !== undefined) {
     return {
       ...gridToWorld(cityData, landmark.gridX, landmark.gridZ),
-      height: (landmark.height || 30) * 3,
+      height: (landmark.height || 30) * TOWER_SCALE,
       name: landmark.name,
     };
   }
@@ -175,12 +182,13 @@ export default function CinematicTour({ viewerRef }) {
       try {
         try { viewer.scene.screenSpaceCameraController.enableInputs = false; } catch {}
 
+        // Opening wide orbit — pulled back for the larger city footprint.
         const cityCenter = Cesium.Cartesian3.fromDegrees(
           cityData.lon,
           cityData.lat,
           cityData.cityRadius * 4
         );
-        const wideRange = Math.max(cityData.cityRadius * 5.5, 3500);
+        const wideRange = Math.max(cityData.cityRadius * 5.5, 5000);
 
         await orbit(cityCenter, wideRange, -38, 0.55, 7500);
         if (!activeRef.current) return;
@@ -207,18 +215,28 @@ export default function CinematicTour({ viewerRef }) {
           const resolved = resolveLandmarkCoordinates(cityData, lm);
           if (!resolved) continue;
 
-          await fly(resolved.lon, resolved.lat - 0.003, 250, 10, -15, 2.0);
+          // Approach altitude scales with the tower so the camera arrives
+          // looking up at its full height instead of clipping through it.
+          const approachAlt = Math.max(resolved.height * 1.1, 600);
+          // Back the approach off further for taller towers.
+          const approachOffset = 0.003 + resolved.height / 4_000_000;
+          await fly(resolved.lon, resolved.lat - approachOffset, approachAlt, 10, -18, 2.4);
           if (!activeRef.current) return;
 
+          // Close orbit: frame the whole tower. Center near its vertical
+          // midpoint; radius scales with height so the tower fits in frame.
           const landmarkCenter = Cesium.Cartesian3.fromDegrees(
             resolved.lon,
             resolved.lat,
-            resolved.height * 1.5
+            resolved.height * 0.55
           );
-          await orbit(landmarkCenter, 120, -8, 1.0, 10000);
+          const orbitRadius = Math.max(resolved.height * 1.4, 300);
+          const orbitPitch = -14;
+          await orbit(landmarkCenter, orbitRadius, orbitPitch, 1.0, 10000);
           if (!activeRef.current) return;
         }
 
+        // Pull back out over the full city.
         await fly(cityData.lon, cityData.lat, cityData.cityRadius * 3.5, 0, -30, 2.5);
         if (!activeRef.current) return;
 
