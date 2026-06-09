@@ -1,15 +1,10 @@
-import EditorialLayout from './components/Layout/EditorialLayout';
+import PhiladelphiaApp from './PhiladelphiaApp';
 
 /**
- * App shell — the Living Article layout.
- *
- * The globe is rendered as the page background and an editorial shell
- * (header + scrollable article feed + region rail) floats on top of it.
- * The Immersion Controller, mounted inside EditorialLayout, manages the
- * Ambient → Reactive → Immersive state machine. The same layout is
- * responsive down to mobile via CSS — no separate mobile component
- * needed for the editorial experience.
+ * Philadelphia Pilot — standalone 3D map experience.
+ * The multi-city editorial layout is preserved in ./components/Layout/EditorialLayout
+ * for future use.
  */
 export default function App() {
-  return <EditorialLayout />;
+  return <PhiladelphiaApp />;
 }

@@ -589,3 +589,44 @@ function adjustBrightness(hex, factor) {
   const newB = Math.min(255, Math.round(b * factor));
   return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
 }
+
+Here's what the integration added without breaking anything:
+
+  New fields on every building:
+  - id — stable string key ('penn_research_tower', etc.)
+  - label — short display name for map labels
+  - type — normalized type ('university', 'hospital', 'vcHub', 'techCenter', 'transit', 'gap')
+  - role — 'anchor' / 'transit' / 'gap' (controls innovation proximity contribution)
+  - towerMetric — which metric drives the tower height
+  - rdSpending / vcDealCount / patents / startupEmployment — four CBS innovation inputs
+  - sourceTractId — original stated tract ID (preserved; tractId now resolves to a generated geoid)
+
+  New exports from philadelphiaBuildings.js:
+  - CBS_CONFIG — 4-factor weighted config with normalization ranges
+  - INNOVATION_ANCHORS — filtered list of anchor buildings (no transit/gaps)
+  - PHILADELPHIA_NEIGHBORHOOD_LABELS — label points for the map
+  - outcomeIndex, innovationIndex, computeCommunityBenefitScore, plainLanguageSummary — CBS engine
+  - generatePhiladelphiaTracts — gaussian-proximity tract generator
+  - PHILADELPHIA — fully assembled dataset (PHILADELPHIA.tracts has 100+ generated grid tracts)
+  - PHASE2_CITIES — 10-city expansion stub (Boston, NYC, SF, Chicago, DC, Baltimore, Pittsburgh, Wilmington, Austin, Detroit)
+  - getCityData, getTractByGeoid, getBuildingsByTract, getTractPanel, getInsights, getBuildingColor, getMobilityColor
+
+✻ Brewed for 7m 3s
+
+※ recap: Building a Philadelphia innovation map pilot for technical.me. Just integrated richer seed data into philadelphiaBuildings.js with CBS engine, 
+  PHASE2_CITIES stub, and lookup helpers. Next: run the dev server to verify the map loads correctly.
+
+
+ Two fixes applied:
+
+  LOD fix — maximumScreenSpaceError dropped from 16 (Cesium default) to 2 when the tileset loads. This tells Cesium to keep loading tile detail even when
+  buildings are small on screen, so you'll see them from the full 800m city view instead of only when you dive in close.
+
+  Height exaggeration — uses scene.verticalExaggeration + verticalExaggerationRelativeHeight: 0, which is Cesium's native API for exaggerating 3D Tile
+  heights relative to the ellipsoid surface. This works correctly across the whole tile extent (unlike modelMatrix scaling which skews at geographic scale).
+  It's scoped to 3D Tiles and terrain — it does not affect polygon entities, so your custom synthetic buildings won't be double-scaled.
+
+  When you toggle OSM on, a green ↕ OSM height slider appears beneath the toggle, range 1–10×, defaulting to 2×. Turn OSM off and both the slider and the
+  exaggeration reset.
+
+✻ Brewed for 2m 35s

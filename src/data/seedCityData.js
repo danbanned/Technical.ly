@@ -427,6 +427,7 @@ export const SEED_CITIES = {
           { CommercialRealEstate: 'Transbay District' }
         ]
       },
+      
       {
         template: 'financialTower',
         techCenterRef: 'SOMA Tech Corridor',

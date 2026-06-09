@@ -1,0 +1,783 @@
+/* ─────────────────────────────────────────────────────────────────────
+   Philadelphia Pilot — standalone layout
+   ───────────────────────────────────────────────────────────────────── */
+
+/* App shell */
+.phila-app {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+/* Top header */
+.phila-app-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 44px;
+  background: rgba(8, 10, 24, 0.9);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  z-index: 300;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.phila-app-wordmark {
+  font-size: 15px;
+  font-weight: 800;
+  color: #00d1ff;
+  letter-spacing: -0.02em;
+  font-family: system-ui, sans-serif;
+}
+
+.phila-app-divider {
+  color: rgba(255,255,255,0.2);
+  font-size: 14px;
+}
+
+.phila-app-title {
+  font-size: 13px;
+  color: #94a3b8;
+  font-family: system-ui, sans-serif;
+}
+
+/* Sample data badge (header variant) */
+.phila-sample-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(250,200,0,0.15);
+  color: #fac800;
+  border: 1px solid rgba(250,200,0,0.3);
+}
+
+.phila-sample-badge--header {
+  margin-left: auto;
+}
+
+/* Small inline sample tag */
+.phila-sample-tag {
+  font-size: 9px;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ── Rails ──────────────────────────────────────────────────────── */
+.phila-left-rail {
+  position: fixed;
+  top: 52px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.phila-right-rail {
+  position: fixed;
+  top: 52px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+  pointer-events: none;
+  max-height: calc(100vh - 112px);
+  overflow-y: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.phila-right-rail::-webkit-scrollbar { display: none; }
+
+/* ── Base panel ─────────────────────────────────────────────────── */
+.phila-panel {
+  background: rgba(8, 12, 28, 0.88);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: #e2e8f0;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  pointer-events: all;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* ── Layer toggles ──────────────────────────────────────────────── */
+.phila-layer-panel {
+  width: 200px;
+  padding: 12px 14px;
+}
+
+.phila-layer-panel h3 {
+  margin: 0 0 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.phila-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 4px;
+  border-radius: 5px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+  min-height: 32px;
+}
+
+.phila-toggle-row:hover { background: rgba(255,255,255,0.05); }
+
+.phila-toggle-row:focus-within {
+  outline: 2px solid #ffd700;
+  outline-offset: 1px;
+}
+
+.phila-toggle-row input[type="checkbox"] {
+  accent-color: #00d1ff;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.phila-toggle-row span {
+  font-size: 12px;
+  color: #cbd5e1;
+  flex: 1;
+}
+
+.phila-toggle-divider {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  margin: 8px 0;
+}
+
+.phila-toggle-row.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.phila-toggle-row.is-disabled input { cursor: not-allowed; }
+
+.phila-toggle-hint {
+  font-size: 9px;
+  color: #475569;
+  margin-left: 2px;
+}
+
+/* Building height slider */
+.phila-height-control {
+  padding: 4px 4px 2px;
+}
+
+.phila-height-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #cbd5e1;
+  margin-bottom: 6px;
+}
+
+.phila-height-val {
+  font-size: 11px;
+  font-weight: 700;
+  color: #00d1ff;
+  min-width: 28px;
+  text-align: right;
+}
+
+.phila-height-slider {
+  width: 100%;
+  accent-color: #00d1ff;
+  cursor: pointer;
+  height: 4px;
+}
+
+.phila-height-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #475569;
+  margin-top: 3px;
+}
+
+.phila-osm-height-control {
+  border-top: 1px solid rgba(139, 195, 74, 0.15);
+  padding-top: 8px;
+  margin-top: 2px;
+}
+
+.phila-height-slider--osm {
+  accent-color: #8bc34a;
+}
+
+/* ── Region snapshot ────────────────────────────────────────────── */
+.phila-region-panel {
+  width: 290px;
+  padding: 12px 14px;
+}
+
+.phila-region-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.phila-region-city {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.phila-region-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.phila-region-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.phila-region-val {
+  font-size: 16px;
+  font-weight: 800;
+  color: #00d1ff;
+  line-height: 1.2;
+}
+
+.phila-region-lbl {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.phila-region-signal {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 8px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.phila-region-signal.is-alert {
+  background: rgba(255,160,0,0.12);
+  color: #ffa726;
+  border: 1px solid rgba(255,160,0,0.25);
+}
+
+.phila-region-signal.is-ok {
+  background: rgba(76,175,80,0.12);
+  color: #66bb6a;
+  border: 1px solid rgba(76,175,80,0.25);
+}
+
+/* ── Inspect panel ──────────────────────────────────────────────── */
+.phila-inspect-panel {
+  width: 290px;
+  padding: 14px;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+
+.phila-inspect-panel::-webkit-scrollbar { width: 4px; }
+.phila-inspect-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+.phila-inspect-header { margin-bottom: 12px; }
+
+.phila-inspect-header h2 {
+  margin: 0 0 2px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.3;
+}
+
+.phila-subhead {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* CBS score block */
+.phila-cbs-block {
+  background: rgba(0,209,255,0.06);
+  border: 1px solid rgba(0,209,255,0.15);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.phila-cbs-label {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.phila-cbs-number {
+  font-size: 36px;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.phila-cbs-denom {
+  font-size: 16px;
+  font-weight: 400;
+  color: #475569;
+}
+
+/* Gradient gauge bar */
+.phila-cbs-gauge {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #ef5350 0%, #ffa726 50%, #4caf50 100%);
+  margin-bottom: 4px;
+}
+
+.phila-cbs-gauge-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.6);
+  transition: left 0.4s ease;
+}
+
+.phila-cbs-gauge-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #475569;
+  margin-bottom: 0;
+}
+
+/* Mismatch alert */
+.phila-mismatch-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  background: rgba(255,160,0,0.1);
+  border: 1px solid rgba(255,160,0,0.28);
+  border-radius: 6px;
+  padding: 7px 10px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #ffa726;
+  line-height: 1.4;
+}
+
+/* Summary text */
+.phila-summary {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Stat sections */
+.phila-stat-section { margin-bottom: 10px; }
+
+.phila-stat-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.phila-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.phila-stat-row:last-child { border-bottom: none; }
+.phila-stat-label { color: #94a3b8; }
+.phila-stat-value { color: #e2e8f0; font-weight: 600; }
+
+/* Vitality bars */
+.phila-vitality-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.phila-vitality-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.phila-vitality-icon { font-size: 12px; width: 16px; flex-shrink: 0; }
+.phila-vitality-name { font-size: 11px; color: #94a3b8; width: 115px; flex-shrink: 0; }
+
+.phila-vitality-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.phila-vitality-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: #00d1ff;
+  transition: width 0.4s ease;
+}
+
+.phila-vitality-num {
+  font-size: 10px;
+  color: #475569;
+  width: 24px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Sample data notice */
+.phila-sample-notice {
+  margin-top: 10px;
+  font-size: 10px;
+  color: #475569;
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Action buttons */
+.phila-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.phila-btn {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: opacity 0.15s, background 0.15s;
+  min-height: 32px;
+}
+
+.phila-btn:hover { opacity: 0.85; }
+.phila-btn:focus-visible {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
+}
+
+.phila-btn-primary {
+  background: rgba(0,209,255,0.15);
+  color: #00d1ff;
+  border: 1px solid rgba(0,209,255,0.35);
+}
+
+.phila-btn-secondary {
+  background: rgba(255,255,255,0.06);
+  color: #94a3b8;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.phila-btn-danger {
+  background: rgba(239,83,80,0.12);
+  color: #ef9a9a;
+  border: 1px solid rgba(239,83,80,0.25);
+}
+
+/* ── Insights card ──────────────────────────────────────────────── */
+.phila-insights-panel {
+  width: 290px;
+  padding: 12px 14px;
+}
+
+.phila-insights-panel h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.phila-gap-item {
+  display: flex;
+  align-items: center;
+  padding: 7px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  gap: 6px;
+  transition: background 0.12s;
+  min-height: 36px;
+}
+
+.phila-gap-item:hover,
+.phila-gap-item:focus {
+  background: rgba(0,209,255,0.08);
+  outline: 1px solid rgba(0,209,255,0.2);
+}
+
+.phila-gap-rank {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ef5350;
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.phila-gap-name {
+  flex: 1;
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.3;
+}
+
+.phila-gap-cbs {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ef5350;
+  white-space: nowrap;
+}
+
+/* ── Tract list ─────────────────────────────────────────────────── */
+.phila-tract-panel {
+  width: 200px;
+  padding: 10px 12px;
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.phila-tract-panel::-webkit-scrollbar { width: 3px; }
+.phila-tract-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+
+.phila-tract-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
+.phila-tract-toggle:focus-visible {
+  outline: 2px solid #ffd700;
+  border-radius: 3px;
+}
+
+.phila-tract-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 11px;
+  color: #94a3b8;
+  transition: background 0.1s;
+  min-height: 28px;
+}
+
+.phila-tract-item:hover { background: rgba(255,255,255,0.05); color: #e2e8f0; }
+
+.phila-tract-item:focus {
+  outline: 2px solid #ffd700;
+  outline-offset: 1px;
+  background: rgba(255,215,0,0.06);
+}
+
+.phila-tract-item.is-selected {
+  background: rgba(0,209,255,0.12);
+  color: #00d1ff;
+}
+
+.phila-tract-cbs {
+  font-size: 10px;
+  color: #475569;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── Compare panel ──────────────────────────────────────────────── */
+.phila-compare-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 250;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  padding: 16px;
+}
+
+.phila-compare-panel {
+  width: 560px;
+  max-width: 100%;
+  padding: 20px;
+  background: rgba(8, 12, 28, 0.97);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+}
+
+.phila-compare-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.phila-compare-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.phila-compare-cols {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: 16px;
+}
+
+.phila-compare-divider {
+  background: rgba(255,255,255,0.08);
+  align-self: stretch;
+}
+
+.phila-compare-col h4 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #00d1ff;
+}
+
+/* ── Legend ─────────────────────────────────────────────────────── */
+.phila-legend-panel {
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 7px 14px;
+  z-index: 100;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.phila-legend-dots {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.phila-legend-dot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.phila-legend-dot-circle {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.phila-legend-sep {
+  width: 1px;
+  height: 16px;
+  background: rgba(255,255,255,0.1);
+}
+
+.phila-legend-gradient {
+  width: 80px;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.phila-legend-mobility {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.phila-legend-mobility-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.phila-legend-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #475569;
+}

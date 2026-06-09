@@ -8,6 +8,8 @@ import DealFlowArcs from './Layers/DealFlowArcs';
 import MobilityHeatmap from './Layers/MobilityHeatmap';
 import DayNightCycle from './Effects/DayNightCycle';
 import ParticleDust from './Effects/ParticleDust';
+import PhiladelphiaLayers from './Layers/PhiladelphiaLayers';
+import { isPhilaEntity, resolvePick } from '../../map/interactions';
 
 // Continental US bounds — used to clip imagery and constrain min/max
 // zoom so the camera can't fly to the bottom of the Pacific or drop
@@ -124,9 +126,20 @@ export default function GlobeViewer({ mode = 'foreground' }) {
       const picked = viewer.scene.pick(click.position);
       const entity = picked?.id;
       if (entity instanceof Cesium.Entity) {
+        if (isPhilaEntity(entity)) {
+          const pick = resolvePick(entity);
+          const store = useMapStore.getState();
+          store.resetSelection();
+          if (pick?.type === 'tract') store.selectPhilaTract(pick.ref);
+          else if (pick?.type === 'building') store.selectPhilaBuilding(pick.ref);
+          return;
+        }
         const isShift = shiftPressedRef.current;
         selectEntity(pickedEntityToSelection(entity), { shift: isShift });
       } else {
+        const store = useMapStore.getState();
+        store.selectPhilaTract(null);
+        store.selectPhilaBuilding(null);
         selectEntity(null);
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -177,6 +190,7 @@ export default function GlobeViewer({ mode = 'foreground' }) {
           <DealFlowArcs viewer={viewerRef.current} />
           <MobilityHeatmap viewer={viewerRef.current} />
           <ParticleDust viewer={viewerRef.current} />
+          <PhiladelphiaLayers viewer={viewerRef.current} />
         </>
       )}
     </div>

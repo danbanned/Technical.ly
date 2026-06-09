@@ -9,6 +9,7 @@ import LivingEcosystem from '../Immersive/LivingEcosystem';
 import ImmersionAnnouncer from '../Editorial/ImmersionAnnouncer';
 import CinematicTour from '../Immersive/CinematicTour';
 import { useImmersionController } from '../../hooks/useImmersionController';
+import PhiladelphiaPilot from '../../ui/PhiladelphiaPilot';
 
 /**
  * EditorialLayout — the Living Article.
@@ -47,6 +48,7 @@ export default function EditorialLayout() {
       <LivingEcosystem />
       <CinematicTour />
       <ImmersionAnnouncer />
+      <PhiladelphiaPilot />
     </>
   );
 }

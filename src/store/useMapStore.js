@@ -162,4 +162,57 @@ export const useMapStore = create((set, get) => ({
       showStatsPanel: false,
       showComparisonPanel: false,
     }),
+
+  // ─────────────── Philadelphia Pilot ─────────────────────────
+  philaLayerVisibility: { innovation: true, investment: true, mobility: true, labels: false },
+  philaCBSafeMode: false,
+  philaOSMBuildings: false,
+  philaOSMHeightScale: 2,
+  philaGoogleTiles: false,
+  philaBuildingHeightScale: 1,
+  philaSelectedTract: null,
+  philaSelectedBuilding: null,
+  philaCompareTracts: [null, null],
+  philaTractsWithCBS: [],
+  philaBuildings: [],
+
+  setPhilaLayerVisibility: (key, val) =>
+    set((s) => ({ philaLayerVisibility: { ...s.philaLayerVisibility, [key]: val } })),
+
+  setPhilaCBSafeMode: (flag) => set({ philaCBSafeMode: flag }),
+
+  setPhilaOSMBuildings: (flag) => set({ philaOSMBuildings: flag }),
+
+  setPhilaOSMHeightScale: (scale) => set({ philaOSMHeightScale: scale }),
+
+  setPhilaGoogleTiles: (flag) => set({ philaGoogleTiles: flag }),
+
+  setPhilaBuildingHeightScale: (scale) => set({ philaBuildingHeightScale: scale }),
+
+  selectPhilaTract: (tractIdOrNull) =>
+    set((s) => {
+      if (!tractIdOrNull) return { philaSelectedTract: null };
+      const tract = s.philaTractsWithCBS.find((t) => t.id === tractIdOrNull);
+      return { philaSelectedTract: tract ?? null, philaSelectedBuilding: null };
+    }),
+
+  selectPhilaBuilding: (idxOrNull) =>
+    set((s) => {
+      if (idxOrNull === null || idxOrNull === undefined) return { philaSelectedBuilding: null };
+      return { philaSelectedBuilding: s.philaBuildings[idxOrNull] ?? null, philaSelectedTract: null };
+    }),
+
+  addPhilaToCompare: (tract) =>
+    set((s) => {
+      const [a, b] = s.philaCompareTracts;
+      if (!a) return { philaCompareTracts: [tract, null] };
+      if (!b) return { philaCompareTracts: [a, tract] };
+      return { philaCompareTracts: [b, tract] };
+    }),
+
+  clearPhilaCompare: () => set({ philaCompareTracts: [null, null] }),
+
+  setPhilaTractsWithCBS: (tracts) => set({ philaTractsWithCBS: tracts }),
+
+  setPhilaBuildings: (buildings) => set({ philaBuildings: buildings }),
 }));
