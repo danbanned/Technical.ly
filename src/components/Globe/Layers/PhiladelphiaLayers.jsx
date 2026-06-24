@@ -126,6 +126,8 @@ export default function PhiladelphiaLayers({ viewer }) {
   const philaLayerVisibility = useMapStore((s) => s.philaLayerVisibility);
   const philaCBSafeMode = useMapStore((s) => s.philaCBSafeMode);
   const philaBuildingHeightScale = useMapStore((s) => s.philaBuildingHeightScale);
+  const philaEconomicColor = useMapStore((s) => s.philaEconomicColor);
+  const philaEnrichedBuildings = useMapStore((s) => s.philaEnrichedBuildings);
 
   // Compute CBS once on mount and push to store
   useEffect(() => {
@@ -185,12 +187,18 @@ export default function PhiladelphiaLayers({ viewer }) {
   }, [philaLayerVisibility.innovation]);
 
   useEffect(() => {
-    groupRefs.current.investment.forEach((e) => { e.show = philaLayerVisibility.investment; });
-  }, [philaLayerVisibility.investment]);
+    const suppressedByEconomicColor = philaEconomicColor && philaEnrichedBuildings;
+    groupRefs.current.investment.forEach((e) => {
+      e.show = suppressedByEconomicColor ? false : philaLayerVisibility.investment;
+    });
+  }, [philaLayerVisibility.investment, philaEconomicColor, philaEnrichedBuildings]);
 
   useEffect(() => {
-    groupRefs.current.mobility.forEach((e) => { e.show = philaLayerVisibility.mobility; });
-  }, [philaLayerVisibility.mobility]);
+    const suppressedByEconomicColor = philaEconomicColor && philaEnrichedBuildings;
+    groupRefs.current.mobility.forEach((e) => {
+      e.show = suppressedByEconomicColor ? false : philaLayerVisibility.mobility;
+    });
+  }, [philaLayerVisibility.mobility, philaEconomicColor, philaEnrichedBuildings]);
 
   useEffect(() => {
     groupRefs.current.labels.forEach((e) => { e.show = philaLayerVisibility.labels; });
