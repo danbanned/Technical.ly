@@ -1,4 +1,6 @@
 import * as Cesium from 'cesium';
+import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useMapStore } from '../store/useMapStore';
 import { buildTractInsightFromStore } from '../core/insightEngine';
 
@@ -96,7 +98,7 @@ function CBSGauge({ cbs }) {
 }
 
 function TractInspect({ tract }) {
-  const viewer = useMapStore((s) => s.viewer);
+  const viewer       = useMapStore((s) => s.viewer);
   const addToCompare = useMapStore((s) => s.addPhilaToCompare);
 
   const vitality = {
@@ -235,18 +237,56 @@ function BuildingInspect({ building }) {
 export default function InspectPanel() {
   const tract = useMapStore((s) => s.philaSelectedTract);
   const building = useMapStore((s) => s.philaSelectedBuilding);
+  const viewer = useMapStore((s) => s.viewer);
   const clearTract = () => useMapStore.getState().selectPhilaTract(null);
   const clearBuilding = () => useMapStore.getState().selectPhilaBuilding(null);
+  const [expanded, setExpanded] = useState(false);
+
+  const toggleExpanded = useCallback(() => {
+    setExpanded((v) => {
+      const next = !v;
+      if (viewer) viewer.scene.screenSpaceCameraController.enableInputs = !next;
+      return next;
+    });
+  }, [viewer]);
+
+  const collapse = useCallback(() => {
+    setExpanded(false);
+    if (viewer) viewer.scene.screenSpaceCameraController.enableInputs = true;
+  }, [viewer]);
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape' && expanded) collapse(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [expanded, collapse]);
+
+  // Re-enable inputs if panel closes while expanded
+  useEffect(() => {
+    if (!tract && !building && expanded) {
+      setExpanded(false);
+      if (viewer) viewer.scene.screenSpaceCameraController.enableInputs = true;
+    }
+  }, [tract, building, expanded, viewer]);
 
   if (!tract && !building) return null;
 
-  return (
+  const panelContent = (
     <div
-      className="phila-panel phila-inspect-panel"
+      className={`phila-panel phila-inspect-panel${expanded ? ' is-expanded' : ''}`}
       role="complementary"
       aria-label="Selection details"
+      aria-expanded={expanded}
     >
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+      <div className="phila-panel-topbar">
+        <button
+          className="phila-icon-btn"
+          onClick={toggleExpanded}
+          aria-label={expanded ? 'Minimize panel' : 'Expand panel to full screen'}
+          title={expanded ? 'Minimize' : 'Expand'}
+        >
+          {expanded ? '⊡' : '⊞'}
+        </button>
         <button
           className="phila-btn phila-btn-secondary"
           style={{ flex: 'none', padding: '3px 8px', fontSize: 11 }}
@@ -260,4 +300,16 @@ export default function InspectPanel() {
       {!tract && building && <BuildingInspect building={building} />}
     </div>
   );
+
+  if (expanded) {
+    return createPortal(
+      <>
+        <div className="phila-expand-backdrop" onClick={collapse} />
+        {panelContent}
+      </>,
+      document.body
+    );
+  }
+
+  return panelContent;
 }

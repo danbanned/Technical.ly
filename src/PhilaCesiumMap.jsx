@@ -7,6 +7,123 @@ const HAS_ION_TOKEN    = !!import.meta.env.VITE_CESIUM_ION_TOKEN;
 const GOOGLE_API_KEY   = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const HAS_GOOGLE_KEY   = !!GOOGLE_API_KEY;
 
+// ── Enriched buildings style builders ────────────────────────────────────────
+//
+// Property names as exported by enrich_buildings.py:
+//   height_m         — parsed numeric height (metres); "height" is the raw OSM string
+//   mobilityScore    — 0-100 tract-level mobility
+//   innovationIndex  — 0-1 tract-level innovation index
+//   building         — OSM building tag (e.g. "university", "yes")
+//   amenity          — OSM amenity tag (e.g. "hospital", "college")
+//
+// If all buildings appear gray after enabling Economic Color, open the browser
+// console and check the "[EnrichedBuildings]" lines to see the actual property
+// names reported by the tileset — Cesium ion may have normalised them.
+
+function buildEconomicStyle() {
+  return new Cesium.Cesium3DTileStyle({
+    color: {
+      conditions: [
+        // Cast to Number() because Cesium ion may store numeric properties as strings.
+        // 1. Mismatch alert — high innovation + low mobility → MAGENTA
+        ['Number(${innovationIndex}) > 0.6 && Number(${mobilityScore}) < 35',
+         'color("#D500F9", 0.95)'],
+
+        // 2. University buildings — blue, shaded by height_m
+        ["${building} === 'university' || ${amenity} === 'university' || ${amenity} === 'college'",
+         "Number(${height_m}) > 60 ? color('#0D47A1', 0.9) : Number(${height_m}) > 30 ? color('#1565C0', 0.9) : color('#2979FF', 0.9)"],
+
+        // 3. Healthcare anchors → CYAN
+        ["${amenity} === 'hospital' || ${building} === 'hospital' || ${amenity} === 'clinic' || ${amenity} === 'doctors'",
+         'color("#00E5FF", 0.9)'],
+
+        // 4-6. Mobility tiers for buildings matched to a tract
+        ['Number(${mobilityScore}) >= 70', 'color("#00E676", 0.88)'],
+        ['Number(${mobilityScore}) >= 40', 'color("#FFD600", 0.88)'],
+        ['Number(${mobilityScore}) > 0',   'color("#FF3D00", 0.88)'],
+
+        // 7-9. Height fallback for unmatched buildings (outside the 16 seed tracts)
+        ['Number(${height_m}) > 60', 'color("#00BCD4", 0.70)'],
+        ['Number(${height_m}) > 30', 'color("#0097A7", 0.70)'],
+        ['Number(${height_m}) > 0',  'color("#00838F", 0.65)'],
+
+        // 10. No data at all
+        ['true', 'color("#455A64", 0.55)'],
+      ],
+    },
+  });
+}
+
+// Height-only proof-of-concept style — no tract data required.
+// Enable via the "Height test" toggle in Layer Controls to confirm the
+// style system is wired correctly before diagnosing property names.
+function buildHeightOnlyStyle() {
+  return new Cesium.Cesium3DTileStyle({
+    color: {
+      conditions: [
+        ['Number(${height_m}) > 80', 'color("#00E5FF", 0.95)'],
+        ['Number(${height_m}) > 40', 'color("#40C4FF", 0.90)'],
+        ['Number(${height_m}) > 15', 'color("#82B1FF", 0.85)'],
+        ['Number(${height_m}) > 0',  'color("#B0BEC5", 0.75)'],
+        ['true',                     'color("#546E7A", 0.60)'],
+      ],
+    },
+  });
+}
+
+function buildGrayStyle() {
+  return new Cesium.Cesium3DTileStyle({
+    color: { conditions: [['true', 'color("#607D8B", 0.75)']] },
+  });
+}
+
+function pickEnrichedStyle(economicColor, heightDebug) {
+  if (heightDebug)    return buildHeightOnlyStyle();
+  if (economicColor)  return buildEconomicStyle();
+  return buildGrayStyle();
+}
+
+// Fires once when the first tile with features loads.
+// Logs the actual property names from the tileset so you can verify them.
+function attachPropertyInspector(tileset) {
+  // Log schema-level property stats (available immediately after load)
+  const schema = tileset.properties;
+  if (schema && Object.keys(schema).length) {
+    console.log('[EnrichedBuildings] schema properties (name → {min,max}):', schema);
+  } else {
+    console.warn('[EnrichedBuildings] tileset.properties is empty — tile not yet fully loaded');
+  }
+
+  let inspected = false;
+  const onTileLoad = (tile) => {
+    if (inspected) return;
+    try {
+      const c = tile.content;
+      if (c && typeof c.getFeature === 'function' && c.featuresLength > 0) {
+        inspected = true;
+        tileset.tileLoad.removeEventListener(onTileLoad);
+        const f = c.getFeature(0);
+        const ids = f.getPropertyIds ? f.getPropertyIds() : [];
+        const sample = Object.fromEntries(ids.map((id) => [id, f.getProperty(id)]));
+        console.log('[EnrichedBuildings] ▶ actual property names:', ids);
+        console.log('[EnrichedBuildings] ▶ sample feature values:', sample);
+
+        const expected = ['mobilityScore', 'innovationIndex', 'height_m', 'building', 'amenity'];
+        const missing  = expected.filter((k) => !ids.includes(k));
+        if (missing.length) {
+          console.warn(
+            '[EnrichedBuildings] ⚠ expected properties NOT found:', missing,
+            '\n  → update buildEconomicStyle() conditions to use the names above.',
+          );
+        } else {
+          console.log('[EnrichedBuildings] ✓ all expected properties present');
+        }
+      }
+    } catch (_) { /* parent tiles have no features */ }
+  };
+  tileset.tileLoad.addEventListener(onTileLoad);
+}
+
 /**
  * Standalone Cesium viewer for the Philadelphia pilot.
  * Free CartoDB Voyager basemap — no Ion token required.
@@ -15,15 +132,19 @@ const HAS_GOOGLE_KEY   = !!GOOGLE_API_KEY;
 export default function PhilaCesiumMap() {
   const containerRef    = useRef(null);
   const viewerRef       = useRef(null);
-  const cartoLayerRef   = useRef(null);   // CartoDB imagery layer handle
-  const osmTilesetRef   = useRef(null);
-  const googleTilesetRef = useRef(null);
+  const cartoLayerRef          = useRef(null);
+  const osmTilesetRef          = useRef(null);
+  const googleTilesetRef       = useRef(null);
+  const enrichedTilesetRef     = useRef(null);
   const [ready, setReady] = useState(false);
 
-  const setViewer          = useMapStore((s) => s.setViewer);
-  const philaOSMBuildings  = useMapStore((s) => s.philaOSMBuildings);
-  const philaOSMHeightScale = useMapStore((s) => s.philaOSMHeightScale);
-  const philaGoogleTiles   = useMapStore((s) => s.philaGoogleTiles);
+  const setViewer               = useMapStore((s) => s.setViewer);
+  const philaOSMBuildings       = useMapStore((s) => s.philaOSMBuildings);
+  const philaOSMHeightScale     = useMapStore((s) => s.philaOSMHeightScale);
+  const philaGoogleTiles        = useMapStore((s) => s.philaGoogleTiles);
+  const philaEnrichedBuildings  = useMapStore((s) => s.philaEnrichedBuildings);
+  const philaEconomicColor      = useMapStore((s) => s.philaEconomicColor);
+  const philaHeightDebug        = useMapStore((s) => s.philaHeightDebug);
 
   // ── Viewer initialisation ────────────────────────────────────────────────
   useEffect(() => {
@@ -144,6 +265,7 @@ export default function PhilaCesiumMap() {
     }
   }, [philaOSMBuildings, ready]);
 
+
   // OSM height exaggeration (applies to 3D Tiles, not polygon entities)
   useEffect(() => {
     if (!ready || !HAS_ION_TOKEN || !philaOSMBuildings) return;
@@ -189,6 +311,51 @@ export default function PhilaCesiumMap() {
       }
     }
   }, [philaGoogleTiles, ready]);
+
+  // ── Enriched Philadelphia Buildings (ion asset 4979179) ─────────────────────
+
+  useEffect(() => {
+    if (!ready || !HAS_ION_TOKEN) return;
+    const viewer = viewerRef.current;
+    if (!viewer || viewer.isDestroyed()) return;
+
+    if (philaEnrichedBuildings) {
+      Cesium.Cesium3DTileset.fromIonAssetId(4980304)
+        .then((tileset) => {
+          if (!viewerRef.current || viewerRef.current.isDestroyed()) {
+            tileset.destroy();
+            return;
+          }
+          tileset.maximumScreenSpaceError = 4;
+          tileset.style = pickEnrichedStyle(philaEconomicColor, philaHeightDebug);
+          attachPropertyInspector(tileset);
+          viewerRef.current.scene.primitives.add(tileset);
+          enrichedTilesetRef.current = tileset;
+        })
+        .catch((err) => console.warn('[Enriched Buildings]', err.message));
+    } else {
+      if (enrichedTilesetRef.current && !viewer.isDestroyed()) {
+        viewer.scene.primitives.remove(enrichedTilesetRef.current);
+        enrichedTilesetRef.current = null;
+      }
+    }
+  }, [philaEnrichedBuildings, ready]);
+
+  // Live-swap style when economic color / height-debug mode toggles
+  useEffect(() => {
+    if (!enrichedTilesetRef.current) return;
+    enrichedTilesetRef.current.style = pickEnrichedStyle(philaEconomicColor, philaHeightDebug);
+  }, [philaEconomicColor, philaHeightDebug]);
+
+  // Dim basemap when economic color mode is on so colored buildings pop
+  useEffect(() => {
+    if (!ready) return;
+    const layer = cartoLayerRef.current;
+    if (!layer) return;
+    layer.brightness = philaEconomicColor ? 0.30 : 1.0;
+    layer.contrast   = philaEconomicColor ? 0.70 : 1.0;
+    layer.saturation = philaEconomicColor ? 0.0  : 1.0;
+  }, [philaEconomicColor, ready]);
 
   return (
     <div

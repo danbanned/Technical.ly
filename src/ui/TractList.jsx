@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useMapStore } from '../store/useMapStore';
 
 export default function TractList() {
@@ -8,7 +9,28 @@ export default function TractList() {
   const viewer = useMapStore((s) => s.viewer);
   const selectPhilaTract = useMapStore((s) => s.selectPhilaTract);
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const listRef = useRef(null);
+
+  const collapse = useCallback(() => {
+    setExpanded(false);
+    if (viewer) viewer.scene.screenSpaceCameraController.enableInputs = true;
+  }, [viewer]);
+
+  const toggleExpanded = useCallback(() => {
+    setExpanded((v) => {
+      const next = !v;
+      if (next && !open) setOpen(true);
+      if (viewer) viewer.scene.screenSpaceCameraController.enableInputs = !next;
+      return next;
+    });
+  }, [viewer, open]);
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape' && expanded) collapse(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [expanded, collapse]);
 
   if (!tracts.length) return null;
 
@@ -17,6 +39,7 @@ export default function TractList() {
   const pickTract = (tract) => {
     selectPhilaTract(tract.id);
     setOpen(false);
+    collapse();
     if (!viewer) return;
     viewer.camera.flyTo({
       destination: Cesium.Cartesian3.fromDegrees(tract.centroid[0], tract.centroid[1], 1200),
@@ -40,21 +63,31 @@ export default function TractList() {
       const items = listRef.current?.querySelectorAll('[role=option]');
       items?.[idx - 1]?.focus();
     }
-    if (e.key === 'Escape') setOpen(false);
+    if (e.key === 'Escape') { setOpen(false); collapse(); }
   };
 
-  return (
-    <div className="phila-panel phila-tract-panel">
-      <button
-        className="phila-tract-toggle"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        aria-controls="phila-tract-list"
-        aria-label={open ? 'Collapse tract list' : 'Expand tract list'}
-      >
-        <span>Tracts ({tracts.length})</span>
-        <span aria-hidden="true">{open ? '▲' : '▼'}</span>
-      </button>
+  const panelContent = (
+    <div className={`phila-panel phila-tract-panel${expanded ? ' is-expanded' : ''}`}>
+      <div className="phila-panel-topbar">
+        <button
+          className="phila-tract-toggle"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-controls="phila-tract-list"
+          aria-label={open ? 'Collapse tract list' : 'Expand tract list'}
+        >
+          <span>Tracts ({tracts.length})</span>
+          <span aria-hidden="true">{open ? '▲' : '▼'}</span>
+        </button>
+        <button
+          className="phila-icon-btn"
+          onClick={toggleExpanded}
+          aria-label={expanded ? 'Minimize panel' : 'Expand to full screen'}
+          title={expanded ? 'Minimize' : 'Expand'}
+        >
+          {expanded ? '⊡' : '⊞'}
+        </button>
+      </div>
 
       {open && (
         <div
@@ -83,4 +116,16 @@ export default function TractList() {
       )}
     </div>
   );
+
+  if (expanded) {
+    return createPortal(
+      <>
+        <div className="phila-expand-backdrop" onClick={collapse} />
+        {panelContent}
+      </>,
+      document.body
+    );
+  }
+
+  return panelContent;
 }

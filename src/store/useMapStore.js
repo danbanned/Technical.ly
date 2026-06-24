@@ -169,6 +169,9 @@ export const useMapStore = create((set, get) => ({
   philaOSMBuildings: false,
   philaOSMHeightScale: 2,
   philaGoogleTiles: false,
+  philaEnrichedBuildings: false,
+  philaEconomicColor: false,
+  philaHeightDebug: false,
   philaBuildingHeightScale: 1,
   philaSelectedTract: null,
   philaSelectedBuilding: null,
@@ -186,6 +189,12 @@ export const useMapStore = create((set, get) => ({
   setPhilaOSMHeightScale: (scale) => set({ philaOSMHeightScale: scale }),
 
   setPhilaGoogleTiles: (flag) => set({ philaGoogleTiles: flag }),
+
+  setPhilaEnrichedBuildings: (flag) => set({ philaEnrichedBuildings: flag }),
+
+  setPhilaEconomicColor: (flag) => set({ philaEconomicColor: flag }),
+
+  setPhilaHeightDebug: (flag) => set({ philaHeightDebug: flag }),
 
   setPhilaBuildingHeightScale: (scale) => set({ philaBuildingHeightScale: scale }),
 
@@ -215,4 +224,8 @@ export const useMapStore = create((set, get) => ({
   setPhilaTractsWithCBS: (tracts) => set({ philaTractsWithCBS: tracts }),
 
   setPhilaBuildings: (buildings) => set({ philaBuildings: buildings }),
+
+  // ── Solution Connector ───────────────────────────────────────────
+  philaConnectMode: false,
+  setPhilaConnectMode: (flag) => set({ philaConnectMode: flag }),
 }));

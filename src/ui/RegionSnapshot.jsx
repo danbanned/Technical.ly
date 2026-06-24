@@ -1,3 +1,5 @@
+import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useMapStore } from '../store/useMapStore';
 import { PHILADELPHIA_BUILDINGS } from '../data/philadelphiaBuildings';
 import { PHILADELPHIA_TRACTS } from '../data/philadelphiaTracts';
@@ -23,14 +25,45 @@ function MobilityRating({ score }) {
 
 export default function RegionSnapshot() {
   const tractsWithCBS = useMapStore((s) => s.philaTractsWithCBS);
+  const viewer = useMapStore((s) => s.viewer);
   const mismatchCount = tractsWithCBS.filter((t) => t.mismatchAlert).length;
   const hasCBS = tractsWithCBS.length > 0;
+  const [expanded, setExpanded] = useState(false);
 
-  return (
-    <div className="phila-panel phila-region-panel" role="region" aria-label="Philadelphia city overview">
-      <div className="phila-region-header">
-        <span className="phila-region-city">Philadelphia, PA</span>
-        <span className="phila-sample-badge">sample data</span>
+  const toggleExpanded = useCallback(() => {
+    setExpanded((v) => {
+      const next = !v;
+      if (viewer) viewer.scene.screenSpaceCameraController.enableInputs = !next;
+      return next;
+    });
+  }, [viewer]);
+
+  const collapse = useCallback(() => {
+    setExpanded(false);
+    if (viewer) viewer.scene.screenSpaceCameraController.enableInputs = true;
+  }, [viewer]);
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape' && expanded) collapse(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [expanded, collapse]);
+
+  const panelContent = (
+    <div className={`phila-panel phila-region-panel${expanded ? ' is-expanded' : ''}`} role="region" aria-label="Philadelphia city overview" aria-expanded={expanded}>
+      <div className="phila-panel-topbar">
+        <div className="phila-region-header" style={{ flex: 1, marginBottom: 0 }}>
+          <span className="phila-region-city">Philadelphia, PA</span>
+          <span className="phila-sample-badge">sample data</span>
+        </div>
+        <button
+          className="phila-icon-btn"
+          onClick={toggleExpanded}
+          aria-label={expanded ? 'Minimize panel' : 'Expand to full screen'}
+          title={expanded ? 'Minimize' : 'Expand'}
+        >
+          {expanded ? '⊡' : '⊞'}
+        </button>
       </div>
 
       <div className="phila-region-grid">
@@ -62,4 +95,16 @@ export default function RegionSnapshot() {
       </div>
     </div>
   );
+
+  if (expanded) {
+    return createPortal(
+      <>
+        <div className="phila-expand-backdrop" onClick={collapse} />
+        {panelContent}
+      </>,
+      document.body
+    );
+  }
+
+  return panelContent;
 }

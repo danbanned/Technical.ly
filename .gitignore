@@ -8,3 +8,8 @@ dist-ssr
 *.log
 .vscode
 .idea
+
+# Large generated data files — uploaded to Cesium ion, not Git
+enriched_buildings.geojson
+*.gpkg
+cache/

@@ -1,3 +1,5 @@
+import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useMapStore } from '../store/useMapStore';
 
 const LAYERS = [
@@ -13,20 +15,59 @@ const HAS_GOOGLE_KEY = !!import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 export default function LayerToggles() {
   const visibility = useMapStore((s) => s.philaLayerVisibility);
   const cbSafe = useMapStore((s) => s.philaCBSafeMode);
-  const osmOn          = useMapStore((s) => s.philaOSMBuildings);
-  const osmHeightScale = useMapStore((s) => s.philaOSMHeightScale);
-  const googleOn       = useMapStore((s) => s.philaGoogleTiles);
+  const osmOn              = useMapStore((s) => s.philaOSMBuildings);
+  const osmHeightScale     = useMapStore((s) => s.philaOSMHeightScale);
+  const googleOn           = useMapStore((s) => s.philaGoogleTiles);
+  const enrichedOn         = useMapStore((s) => s.philaEnrichedBuildings);
+  const economicColor      = useMapStore((s) => s.philaEconomicColor);
+  const heightDebug        = useMapStore((s) => s.philaHeightDebug);
   const heightScale    = useMapStore((s) => s.philaBuildingHeightScale);
+  const connectMode    = useMapStore((s) => s.philaConnectMode);
+  const viewer         = useMapStore((s) => s.viewer);
   const setLayerVisibility = useMapStore((s) => s.setPhilaLayerVisibility);
   const setCBSafe      = useMapStore((s) => s.setPhilaCBSafeMode);
+  const setConnectMode = useMapStore((s) => s.setPhilaConnectMode);
   const setOSMBuildings   = useMapStore((s) => s.setPhilaOSMBuildings);
   const setOSMHeightScale = useMapStore((s) => s.setPhilaOSMHeightScale);
-  const setGoogleTiles    = useMapStore((s) => s.setPhilaGoogleTiles);
-  const setHeightScale    = useMapStore((s) => s.setPhilaBuildingHeightScale);
+  const setGoogleTiles        = useMapStore((s) => s.setPhilaGoogleTiles);
+  const setEnrichedBuildings  = useMapStore((s) => s.setPhilaEnrichedBuildings);
+  const setEconomicColor      = useMapStore((s) => s.setPhilaEconomicColor);
+  const setHeightDebug        = useMapStore((s) => s.setPhilaHeightDebug);
+  const setHeightScale        = useMapStore((s) => s.setPhilaBuildingHeightScale);
+  const [expanded, setExpanded] = useState(false);
 
-  return (
-    <div className="phila-panel phila-layer-panel" role="group" aria-label="Map layer controls">
-      <h3>Layers</h3>
+  const collapse = useCallback(() => {
+    setExpanded(false);
+    if (viewer) viewer.scene.screenSpaceCameraController.enableInputs = true;
+  }, [viewer]);
+
+  const toggleExpanded = useCallback(() => {
+    setExpanded((v) => {
+      const next = !v;
+      if (viewer) viewer.scene.screenSpaceCameraController.enableInputs = !next;
+      return next;
+    });
+  }, [viewer]);
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape' && expanded) collapse(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [expanded, collapse]);
+
+  const panelContent = (
+    <div className={`phila-panel phila-layer-panel${expanded ? ' is-expanded' : ''}`} role="group" aria-label="Map layer controls">
+      <div className="phila-panel-topbar">
+        <h3 style={{ margin: 0 }}>Layers</h3>
+        <button
+          className="phila-icon-btn"
+          onClick={toggleExpanded}
+          aria-label={expanded ? 'Minimize panel' : 'Expand to full screen'}
+          title={expanded ? 'Minimize' : 'Expand'}
+        >
+          {expanded ? '⊡' : '⊞'}
+        </button>
+      </div>
 
       {LAYERS.map(({ key, label, color }) => (
         <label key={key} className="phila-toggle-row">
@@ -98,6 +139,64 @@ export default function LayerToggles() {
         </span>
       </label>
 
+      <label
+        className={`phila-toggle-row${!HAS_ION_TOKEN ? ' is-disabled' : ''}`}
+        title={HAS_ION_TOKEN
+          ? 'Toggle enriched Philadelphia buildings (574k, colored by mobility score)'
+          : 'Add VITE_CESIUM_ION_TOKEN to .env to enable'}
+      >
+        <input
+          type="checkbox"
+          checked={enrichedOn}
+          disabled={!HAS_ION_TOKEN}
+          onChange={(e) => setEnrichedBuildings(e.target.checked)}
+          aria-label="Toggle enriched Philadelphia buildings"
+        />
+        <span style={{ color: enrichedOn && HAS_ION_TOKEN ? '#00d1ff' : '#546e7a' }}>
+          Enriched Buildings{!HAS_ION_TOKEN && <span className="phila-toggle-hint"> (needs Ion)</span>}
+        </span>
+      </label>
+
+      <label
+        className={`phila-toggle-row phila-toggle-sub${!enrichedOn || !HAS_ION_TOKEN ? ' is-disabled' : ''}`}
+        title="Color buildings by economic outcome (mobility score, innovation index, building type)"
+        style={{ paddingLeft: 20 }}
+      >
+        <input
+          type="checkbox"
+          checked={economicColor}
+          disabled={!enrichedOn || !HAS_ION_TOKEN}
+          onChange={(e) => { setEconomicColor(e.target.checked); if (e.target.checked) setHeightDebug(false); }}
+          aria-label="Toggle economic color mode"
+        />
+        <span style={{ color: economicColor && enrichedOn ? '#FF8A00' : '#546e7a', fontSize: '0.82em' }}>
+          Economic Color
+          {economicColor && enrichedOn && (
+            <span className="phila-toggle-hint" style={{ color: '#FF8A00', marginLeft: 4 }}>● live</span>
+          )}
+        </span>
+      </label>
+
+      <label
+        className={`phila-toggle-row phila-toggle-sub${!enrichedOn || !HAS_ION_TOKEN ? ' is-disabled' : ''}`}
+        title="Color buildings by height_m only — no tract data needed. Use to verify the style system works. Check browser console for property names."
+        style={{ paddingLeft: 20 }}
+      >
+        <input
+          type="checkbox"
+          checked={heightDebug}
+          disabled={!enrichedOn || !HAS_ION_TOKEN}
+          onChange={(e) => { setHeightDebug(e.target.checked); if (e.target.checked) setEconomicColor(false); }}
+          aria-label="Toggle height test style"
+        />
+        <span style={{ color: heightDebug && enrichedOn ? '#69f0ae' : '#546e7a', fontSize: '0.82em' }}>
+          Height test
+          {heightDebug && enrichedOn && (
+            <span className="phila-toggle-hint" style={{ color: '#69f0ae', marginLeft: 4 }}>● check console</span>
+          )}
+        </span>
+      </label>
+
       <hr className="phila-toggle-divider" />
 
       <div className="phila-height-control">
@@ -131,6 +230,37 @@ export default function LayerToggles() {
         />
         <span>Color-blind safe</span>
       </label>
+
+      <hr className="phila-toggle-divider" />
+
+      <label
+        className="phila-toggle-row"
+        title="Auto-start Solution Connector tour when a tract is selected"
+      >
+        <input
+          type="checkbox"
+          checked={connectMode}
+          onChange={(e) => setConnectMode(e.target.checked)}
+          aria-label="Toggle Connect mode"
+          style={{ accentColor: '#ffd700' }}
+        />
+        <span style={{ color: connectMode ? '#ffd700' : undefined }}>
+          Connect mode
+          {connectMode && <span className="phila-toggle-hint"> active</span>}
+        </span>
+      </label>
     </div>
   );
+
+  if (expanded) {
+    return createPortal(
+      <>
+        <div className="phila-expand-backdrop" onClick={collapse} />
+        {panelContent}
+      </>,
+      document.body
+    );
+  }
+
+  return panelContent;
 }

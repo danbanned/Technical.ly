@@ -180,6 +180,15 @@
 
 .phila-toggle-row.is-disabled input { cursor: not-allowed; }
 
+/* Indented sub-toggle (e.g. Economic Color under Enriched Buildings) */
+.phila-toggle-row.phila-toggle-sub {
+  border-left: 2px solid rgba(255,138,0,0.35);
+  margin-left: 8px;
+  padding-left: 10px !important;
+  margin-top: -2px;
+  font-size: 0.82em;
+}
+
 .phila-toggle-hint {
   font-size: 9px;
   color: #475569;
@@ -713,17 +722,38 @@
   color: #00d1ff;
 }
 
-/* ── Legend ─────────────────────────────────────────────────────── */
-.phila-legend-panel {
+/* ── Legend stack (legend row + solutions footer) ───────────────── */
+.phila-legend-stack {
   position: fixed;
   bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+}
+
+/* Solutions footer inside the stack must accept pointer events */
+.phila-legend-stack .phila-solution-footer {
+  pointer-events: all;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+}
+
+.phila-legend-stack .phila-tour-overlay {
+  /* TourOverlay renders via its own fixed positioning — no override needed */
+}
+
+/* ── Legend row ─────────────────────────────────────────────────── */
+.phila-legend-panel {
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 7px 14px;
-  z-index: 100;
   pointer-events: none;
   white-space: nowrap;
 }
@@ -732,6 +762,14 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+/* Economic color mode legend — 2-column grid to fit 7 items */
+.phila-legend-economic {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 12px;
+  align-items: start;
 }
 
 .phila-legend-dot {
@@ -780,4 +818,516 @@
   justify-content: space-between;
   font-size: 9px;
   color: #475569;
+}
+
+/* ── Panel expand / fullscreen ──────────────────────────────────── */
+
+/* Semi-transparent backdrop (click-away to collapse) */
+.phila-expand-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  background: rgba(0, 0, 0, 0.25);
+  animation: phila-fade-in 0.2s ease;
+}
+
+@keyframes phila-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Topbar row shared by all expandable panels */
+.phila-panel-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+/* Maximize / minimize icon button */
+.phila-icon-btn {
+  flex: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  color: #94a3b8;
+  font-size: 15px;
+  line-height: 1;
+  padding: 3px 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phila-icon-btn:hover {
+  background: rgba(0, 209, 255, 0.12);
+  color: #00d1ff;
+  border-color: rgba(0, 209, 255, 0.3);
+}
+
+/* Expanded state — shared across all three panels */
+.phila-panel.is-expanded {
+  position: fixed !important;
+  inset: 44px 0 0 0 !important; /* below the app header */
+  width: 100% !important;
+  max-width: 100% !important;
+  height: calc(100vh - 44px) !important;
+  max-height: calc(100vh - 44px) !important;
+  border-radius: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  z-index: 200;
+  overflow-y: auto;
+  padding: 24px clamp(16px, 5vw, 80px);
+  background: rgba(8, 12, 28, 0.90) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  /* Smooth expand transition */
+  animation: phila-panel-expand 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes phila-panel-expand {
+  from {
+    opacity: 0.6;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Wider content area when expanded */
+.phila-panel.is-expanded .phila-region-grid {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.phila-panel.is-expanded .phila-region-val {
+  font-size: 28px;
+}
+
+.phila-panel.is-expanded .phila-region-lbl {
+  font-size: 12px;
+}
+
+.phila-panel.is-expanded .phila-region-signal {
+  font-size: 14px;
+  padding: 10px 16px;
+}
+
+.phila-panel.is-expanded .phila-cbs-number {
+  font-size: 56px;
+}
+
+.phila-panel.is-expanded .phila-cbs-gauge {
+  height: 12px;
+}
+
+.phila-panel.is-expanded .phila-cbs-gauge-thumb {
+  width: 20px;
+  height: 20px;
+}
+
+.phila-panel.is-expanded .phila-gap-item {
+  padding: 14px 16px;
+  font-size: 15px;
+}
+
+.phila-panel.is-expanded .phila-gap-cbs {
+  font-size: 14px;
+}
+
+.phila-panel.is-expanded h3 {
+  font-size: 18px;
+}
+
+.phila-panel.is-expanded .phila-inspect-header h2 {
+  font-size: 22px;
+}
+
+.phila-panel.is-expanded .phila-vitality-section,
+.phila-panel.is-expanded .phila-stat-section {
+  max-width: 640px;
+}
+
+/* TractList expanded — two-column grid */
+.phila-tract-panel.is-expanded #phila-tract-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.phila-tract-panel.is-expanded .phila-tract-item {
+  padding: 10px 14px;
+  font-size: 14px;
+  border-radius: 7px;
+}
+
+.phila-tract-panel.is-expanded .phila-tract-toggle {
+  font-size: 14px;
+}
+
+/* LayerToggles expanded — two-column toggle grid */
+.phila-layer-panel.is-expanded {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.phila-layer-panel.is-expanded .phila-toggle-row {
+  padding: 8px 6px;
+  font-size: 14px;
+}
+
+.phila-layer-panel.is-expanded .phila-toggle-row input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+}
+
+.phila-layer-panel.is-expanded .phila-height-slider {
+  height: 6px;
+}
+
+.phila-layer-panel.is-expanded h3 {
+  font-size: 16px;
+}
+
+/* ── Solution Connector ─────────────────────────────────────────── */
+
+.phila-solution-section {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.phila-solution-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 2px 0 6px;
+  user-select: none;
+}
+
+.phila-solution-header:hover .phila-stat-section-title {
+  color: #cbd5e1;
+}
+
+.phila-solution-chevron {
+  font-size: 13px;
+  color: #475569;
+}
+
+.phila-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: rgba(0, 209, 255, 0.1);
+  color: #00d1ff;
+  border: 1px solid rgba(0, 209, 255, 0.25);
+  vertical-align: middle;
+}
+
+.phila-solution-loading {
+  font-size: 11px;
+  color: #475569;
+  padding: 8px 0;
+  font-style: italic;
+}
+
+.phila-solution-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.phila-solution-card {
+  background: rgba(0, 209, 255, 0.04);
+  border: 1px solid rgba(0, 209, 255, 0.12);
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.phila-solution-card:hover {
+  background: rgba(0, 209, 255, 0.07);
+  border-color: rgba(0, 209, 255, 0.22);
+}
+
+.phila-solution-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-bottom: 5px;
+}
+
+.phila-solution-rank {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 209, 255, 0.15);
+  color: #00d1ff;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phila-solution-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.3;
+}
+
+.phila-solution-desc {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.phila-solution-connect {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-bottom: 6px;
+  padding: 5px 7px;
+  background: rgba(255, 138, 0, 0.06);
+  border-left: 2px solid rgba(255, 138, 0, 0.4);
+  border-radius: 0 5px 5px 0;
+}
+
+.phila-solution-connect-icon {
+  flex: none;
+  font-size: 10px;
+  margin-top: 1px;
+}
+
+.phila-solution-connect-text {
+  font-size: 10px;
+  color: #ffa726;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.phila-solution-asset {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.phila-solution-asset-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #475569;
+}
+
+.phila-solution-asset-name {
+  font-size: 10px;
+  color: #7dd3fc;
+  font-weight: 600;
+}
+
+.phila-solution-map-btn {
+  width: 100%;
+  padding: 5px 10px;
+  font-size: 11px;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.phila-solution-tour-btn {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 11px;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.phila-ai-disclosure {
+  margin: 4px 0 0;
+  font-size: 9px;
+  color: #475569;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* ── Solution footer (connect mode — compact 2×2) ───────────────── */
+.phila-solution-footer {
+  margin-top: 0;
+  padding: 9px 12px;
+  background: rgba(6, 10, 24, 0.96);
+  border: 1px solid rgba(0, 209, 255, 0.35);
+  border-radius: 8px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.phila-solution-footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.phila-solution-footer-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.phila-solution-footer-tour {
+  background: rgba(0, 209, 255, 0.18);
+  border: 1px solid rgba(0, 209, 255, 0.5);
+  border-radius: 4px;
+  color: #00d1ff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.phila-solution-footer-tour:hover {
+  background: rgba(0, 209, 255, 0.32);
+}
+
+.phila-solution-footer-tour:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.phila-solution-footer-loading {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  padding: 4px 0;
+  letter-spacing: 0.1em;
+}
+
+/* 2×2 grid of compact square tiles */
+.phila-solution-tile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.phila-solution-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 8px 9px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+  min-height: 54px;
+}
+
+.phila-solution-tile:hover {
+  background: rgba(0, 209, 255, 0.12);
+  border-color: rgba(0, 209, 255, 0.4);
+}
+
+.phila-solution-tile.is-active {
+  background: rgba(0, 209, 255, 0.18);
+  border-color: rgba(0, 209, 255, 0.6);
+}
+
+.phila-solution-tile-num {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: rgba(0, 209, 255, 0.25);
+  color: #00d1ff;
+  font-size: 8px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.phila-solution-tile-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #e2e8f0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Solution tour overlay (fixed, bottom-center) ───────────────── */
+.phila-tour-overlay {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  max-width: 480px;
+  width: calc(100vw - 32px);
+  background: rgba(8, 12, 28, 0.92);
+  border: 1px solid rgba(0, 209, 255, 0.3);
+  border-radius: 10px;
+  padding: 14px 18px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: phila-tour-slide-up 0.3s ease;
+  pointer-events: none;
+}
+
+@keyframes phila-tour-slide-up {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.phila-tour-step-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #00d1ff;
+  margin-bottom: 4px;
+}
+
+.phila-tour-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 5px;
+}
+
+.phila-tour-why {
+  font-size: 12px;
+  color: #ffa726;
+  font-style: italic;
+  line-height: 1.5;
 }
