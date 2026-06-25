@@ -1342,8 +1342,8 @@
               padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.phila-legend-panel--economic.is-expanded {
-  min-width: 340px;
+.phila-legend-panel--economic.is-legend-wide {
+  min-width: 360px;
 }
 
 .phila-legend-ec-header {
@@ -1388,18 +1388,18 @@
 }
 
 /* Expanded state — bigger swatches + text */
-.phila-legend-panel--economic.is-expanded .phila-legend-dot {
+.phila-legend-panel--economic.is-legend-wide .phila-legend-dot {
   font-size: 12px;
   gap: 8px;
 }
 
-.phila-legend-panel--economic.is-expanded .phila-legend-dot-circle {
+.phila-legend-panel--economic.is-legend-wide .phila-legend-dot-circle {
   width: 13px;
   height: 13px;
   border-radius: 3px;
 }
 
-.phila-legend-panel--economic.is-expanded .phila-legend-economic {
+.phila-legend-panel--economic.is-legend-wide .phila-legend-economic {
   gap: 5px;
 }
 

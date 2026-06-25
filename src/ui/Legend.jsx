@@ -126,7 +126,7 @@ export default function Legend() {
     return (
       <div className="phila-legend-stack">
         {selectedTract && <SolutionConnector tract={selectedTract} forceCompact />}
-        <div className={`phila-panel phila-legend-panel phila-legend-panel--economic${legendExpanded ? ' is-expanded' : ''}`}>
+        <div className={`phila-panel phila-legend-panel phila-legend-panel--economic${legendExpanded ? ' is-legend-wide' : ''}`}>
           <div className="phila-legend-ec-header">
             <span className="phila-legend-ec-title">Building Color</span>
             <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
