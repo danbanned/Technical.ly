@@ -758,6 +758,11 @@
   white-space: nowrap;
 }
 
+.phila-legend-panel--economic {
+  pointer-events: all;
+  white-space: normal;
+}
+
 .phila-legend-dots {
   display: flex;
   align-items: center;
