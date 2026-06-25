@@ -1331,3 +1331,93 @@
   font-style: italic;
   line-height: 1.5;
 }
+
+/* ── Economic legend — interactive (filter + expand + hover) ────── */
+
+.phila-legend-panel--economic {
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 230px;
+  transition: min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.phila-legend-panel--economic.is-expanded {
+  min-width: 340px;
+}
+
+.phila-legend-ec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+
+.phila-legend-ec-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+/* Interactive legend items */
+.phila-legend-dot--btn {
+  cursor: pointer;
+  border-radius: 5px;
+  padding: 2px 5px 2px 2px;
+  transition: background 0.15s, opacity 0.15s;
+  user-select: none;
+  outline: none;
+}
+
+.phila-legend-dot--btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.phila-legend-dot--btn:focus-visible {
+  box-shadow: 0 0 0 2px rgba(0, 209, 255, 0.5);
+}
+
+.phila-legend-dot--btn.is-active {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.phila-legend-dot--btn.is-dimmed {
+  opacity: 0.35;
+}
+
+/* Expanded state — bigger swatches + text */
+.phila-legend-panel--economic.is-expanded .phila-legend-dot {
+  font-size: 12px;
+  gap: 8px;
+}
+
+.phila-legend-panel--economic.is-expanded .phila-legend-dot-circle {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+}
+
+.phila-legend-panel--economic.is-expanded .phila-legend-economic {
+  gap: 5px;
+}
+
+/* Reset filter button */
+.phila-legend-reset-btn {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.phila-legend-reset-btn:hover {
+  background: rgba(255, 61, 0, 0.15);
+  color: #ff6d47;
+  border-color: rgba(255, 61, 0, 0.3);
+}

@@ -77,9 +77,28 @@ function buildGrayStyle() {
   });
 }
 
-function pickEnrichedStyle(economicColor, heightDebug) {
-  if (heightDebug)    return buildHeightOnlyStyle();
-  if (economicColor)  return buildEconomicStyle();
+// Single-category filter — matching buildings keep their color, everything else dims.
+function buildFilteredEconomicStyle(filterKey) {
+  const DIM = 'color("#0a0a0a", 0.10)';
+  const RULES = {
+    mismatch:      ['Number(${innovationIndex}) > 0.6 && Number(${mobilityScore}) < 35',                         'color("#D500F9", 0.95)'],
+    university:    ["${building} === 'university' || ${amenity} === 'university' || ${amenity} === 'college'",    'color("#2979FF", 0.90)'],
+    healthcare:    ["${amenity} === 'hospital' || ${building} === 'hospital' || ${amenity} === 'clinic' || ${amenity} === 'doctors'", 'color("#00E5FF", 0.90)'],
+    highMobility:  ['Number(${mobilityScore}) >= 70',                                                            'color("#00E676", 0.88)'],
+    mediumMobility:['Number(${mobilityScore}) >= 40 && Number(${mobilityScore}) < 70',                          'color("#FFD600", 0.88)'],
+    lowMobility:   ['Number(${mobilityScore}) > 0  && Number(${mobilityScore}) < 40',                           'color("#FF3D00", 0.88)'],
+    other:         ['Number(${mobilityScore}) <= 0',                                                             'color("#546E7A", 0.70)'],
+  };
+  const [cond, expr] = RULES[filterKey] ?? ['true', 'color("#546E7A", 0.70)'];
+  return new Cesium.Cesium3DTileStyle({
+    color: { conditions: [[cond, expr], ['true', DIM]] },
+  });
+}
+
+function pickEnrichedStyle(economicColor, heightDebug, filterColor) {
+  if (heightDebug)                    return buildHeightOnlyStyle();
+  if (economicColor && filterColor)   return buildFilteredEconomicStyle(filterColor);
+  if (economicColor)                  return buildEconomicStyle();
   return buildGrayStyle();
 }
 
@@ -145,6 +164,7 @@ export default function PhilaCesiumMap() {
   const philaEnrichedBuildings  = useMapStore((s) => s.philaEnrichedBuildings);
   const philaEconomicColor      = useMapStore((s) => s.philaEconomicColor);
   const philaHeightDebug        = useMapStore((s) => s.philaHeightDebug);
+  const philaFilterColor        = useMapStore((s) => s.philaFilterColor);
 
   // ── Viewer initialisation ────────────────────────────────────────────────
   useEffect(() => {
@@ -327,7 +347,7 @@ export default function PhilaCesiumMap() {
             return;
           }
           tileset.maximumScreenSpaceError = 4;
-          tileset.style = pickEnrichedStyle(philaEconomicColor, philaHeightDebug);
+          tileset.style = pickEnrichedStyle(philaEconomicColor, philaHeightDebug, philaFilterColor);
           attachPropertyInspector(tileset);
           viewerRef.current.scene.primitives.add(tileset);
           enrichedTilesetRef.current = tileset;
@@ -341,11 +361,11 @@ export default function PhilaCesiumMap() {
     }
   }, [philaEnrichedBuildings, ready]);
 
-  // Live-swap style when economic color / height-debug mode toggles
+  // Live-swap style when economic color / height-debug / filter changes
   useEffect(() => {
     if (!enrichedTilesetRef.current) return;
-    enrichedTilesetRef.current.style = pickEnrichedStyle(philaEconomicColor, philaHeightDebug);
-  }, [philaEconomicColor, philaHeightDebug]);
+    enrichedTilesetRef.current.style = pickEnrichedStyle(philaEconomicColor, philaHeightDebug, philaFilterColor);
+  }, [philaEconomicColor, philaHeightDebug, philaFilterColor]);
 
   // Dim basemap when economic color mode is on so colored buildings pop
   useEffect(() => {

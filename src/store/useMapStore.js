@@ -172,6 +172,8 @@ export const useMapStore = create((set, get) => ({
   philaEnrichedBuildings: false,
   philaEconomicColor: false,
   philaHeightDebug: false,
+  philaFilterColor: null,
+  philaLegendExpanded: false,
   philaBuildingHeightScale: 1,
   philaSelectedTract: null,
   philaSelectedBuilding: null,
@@ -195,6 +197,10 @@ export const useMapStore = create((set, get) => ({
   setPhilaEconomicColor: (flag) => set({ philaEconomicColor: flag }),
 
   setPhilaHeightDebug: (flag) => set({ philaHeightDebug: flag }),
+
+  setPhilaFilterColor: (key) => set({ philaFilterColor: key }),
+
+  setPhilaLegendExpanded: (flag) => set({ philaLegendExpanded: flag }),
 
   setPhilaBuildingHeightScale: (scale) => set({ philaBuildingHeightScale: scale }),
 
