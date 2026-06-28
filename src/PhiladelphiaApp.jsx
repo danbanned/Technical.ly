@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useMapStore } from './store/useMapStore';
+import { useNarration } from './hooks/useNarration';
 import PhilaCesiumMap from './PhilaCesiumMap';
 import PhiladelphiaLayers from './components/Globe/Layers/PhiladelphiaLayers';
 import LayerToggles from './ui/LayerToggles';
@@ -21,6 +22,9 @@ export default function PhiladelphiaApp() {
   const viewer = useMapStore((s) => s.viewer);
   const tractsWithCBS = useMapStore((s) => s.philaTractsWithCBS);
   const hasAutoSelected = useRef(false);
+
+  // Start AI narration pipeline — fires on every activeInsight change
+  useNarration();
 
   // Pre-open Mantua (Tract 172) after CBS computes — shows mismatch story
   useEffect(() => {

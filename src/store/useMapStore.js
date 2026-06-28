@@ -204,7 +204,22 @@ export const useMapStore = create((set, get) => ({
   setPhilaLegendExpanded: (flag) => set({ philaLegendExpanded: flag }),
 
   setActiveInsight: (tract) => set({ activeInsight: tract }),
-  clearActiveInsight: () => set({ activeInsight: null, philaSelectedTract: null }),
+  clearActiveInsight: () => set({
+    activeInsight: null,
+    philaSelectedTract: null,
+    narration: null,
+    narrationLoading: false,
+    narrationError: null,
+  }),
+
+  // ── Narration (Phase 3) ──────────────────────────────────────────────────
+  // narration: { text: string, tractId: string } | null
+  narration: null,
+  narrationLoading: false,
+  narrationError: null,
+  setNarration: (n) => set({ narration: n }),
+  setNarrationLoading: (b) => set({ narrationLoading: b }),
+  setNarrationError: (e) => set({ narrationError: e }),
 
   setPhilaBuildingHeightScale: (scale) => set({ philaBuildingHeightScale: scale }),
 

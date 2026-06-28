@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useMapStore } from '../store/useMapStore';
 import { buildTractInsightFromStore } from '../core/insightEngine';
+import DataStamp from './DataStamp';
 
 function fmt$(n) {
   if (!n && n !== 0) return '—';
@@ -98,8 +99,12 @@ function CBSGauge({ cbs }) {
 }
 
 function TractInspect({ tract }) {
-  const viewer       = useMapStore((s) => s.viewer);
-  const addToCompare = useMapStore((s) => s.addPhilaToCompare);
+  const viewer           = useMapStore((s) => s.viewer);
+  const addToCompare     = useMapStore((s) => s.addPhilaToCompare);
+  const narration        = useMapStore((s) => s.narration);
+  const narrationLoading = useMapStore((s) => s.narrationLoading);
+  const narrationError   = useMapStore((s) => s.narrationError);
+  const showNarration    = narration?.tractId === tract.id;
 
   const vitality = {
     mobility: tract.mobilityScore,
@@ -128,13 +133,25 @@ function TractInspect({ tract }) {
 
       <CBSGauge cbs={tract.cbs} />
 
-      <InsightBlock insight={buildTractInsightFromStore(tract)} />
+      {/* AI narration — falls back to static InsightBlock if unavailable */}
+      {narrationLoading && (
+        <div className="phila-narration-block phila-narration-block--loading" aria-live="polite">
+          <span className="phila-narration-spinner" aria-hidden="true" />
+          Generating analysis…
+        </div>
+      )}
+      {showNarration && !narrationLoading && (
+        <div className="phila-narration-block" aria-live="polite">
+          <div className="phila-narration-label">AI Analysis</div>
+          <p className="phila-narration-text">{narration.text}</p>
+        </div>
+      )}
+      {(narrationError || (!narrationLoading && !showNarration)) && (
+        <InsightBlock insight={buildTractInsightFromStore(tract)} />
+      )}
 
       <div className="phila-stat-section">
-        <div className="phila-stat-section-title">
-          Nearby Innovation
-          <span className="phila-sample-tag">sample data</span>
-        </div>
+        <div className="phila-stat-section-title">Nearby Innovation</div>
         <div className="phila-stat-row">
           <span className="phila-stat-label">R&amp;D spend (1.5 km)</span>
           <span className="phila-stat-value">{fmt$(tract.rdSpendNearby)}</span>
@@ -146,10 +163,7 @@ function TractInspect({ tract }) {
       </div>
 
       <div className="phila-stat-section">
-        <div className="phila-stat-section-title">
-          Resident Outcomes
-          <span className="phila-sample-tag">sample data</span>
-        </div>
+        <div className="phila-stat-section-title">Resident Outcomes</div>
         <div className="phila-stat-row">
           <span className="phila-stat-label">Median income</span>
           <span className="phila-stat-value">{fmt$(tract.medianIncome)}</span>
@@ -189,7 +203,7 @@ function TractInspect({ tract }) {
         </button>
       </div>
 
-      <div className="phila-sample-notice">⚑ All values are synthetic sample data</div>
+      <DataStamp sourceId="syntheticSeed" style={{ marginTop: 10 }} />
     </>
   );
 }
@@ -205,10 +219,7 @@ function BuildingInspect({ building }) {
       </div>
 
       <div className="phila-stat-section">
-        <div className="phila-stat-section-title">
-          Details
-          <span className="phila-sample-tag">sample data</span>
-        </div>
+        <div className="phila-stat-section-title">Details</div>
         {Object.entries(building.stats).map(([k, v]) => (
           <div key={k} className="phila-stat-row">
             <span className="phila-stat-label">
@@ -229,35 +240,60 @@ function BuildingInspect({ building }) {
         </div>
       )}
 
-      <div className="phila-sample-notice">⚑ All values are synthetic sample data</div>
+      <DataStamp sourceId="syntheticSeed" style={{ marginTop: 10 }} />
     </>
   );
 }
 
 function DockedInsight({ tract, onUnpin, onExpand }) {
-  const insight = buildTractInsightFromStore(tract);
+  const insight          = buildTractInsightFromStore(tract);
+  const narration        = useMapStore((s) => s.narration);
+  const narrationLoading = useMapStore((s) => s.narrationLoading);
+  const narrationError   = useMapStore((s) => s.narrationError);
   const cbsColor = tract.cbs >= 7 ? '#4caf50' : tract.cbs >= 4 ? '#ffa726' : '#ef5350';
   const badgeStyle = BADGE_STYLE[insight.badge.tone] ?? BADGE_STYLE.neutral;
+
+  // Show narration only if it belongs to this tract
+  const showNarration = narration?.tractId === tract.id;
+
   return (
     <div className="phila-panel phila-inspect-panel phila-inspect-panel--docked" role="complementary" aria-label="Pinned insight">
-      <button className="phila-docked-body" onClick={onExpand} aria-label={`Re-open ${tract.neighborhood}`}>
-        <span className="phila-docked-cbs" style={{ color: cbsColor }}>
-          {tract.cbs}<span style={{ fontSize: '0.6em', opacity: 0.6 }}>/10</span>
-        </span>
-        <span className="phila-docked-info">
-          <span className="phila-docked-name">{tract.neighborhood}</span>
-          <span className="phila-insight-badge" style={{ ...badgeStyle, fontSize: 10, padding: '1px 6px', borderRadius: 8, fontWeight: 700 }}>
-            {insight.badge.label}
+      <div className="phila-docked-row">
+        <button className="phila-docked-body" onClick={onExpand} aria-label={`Re-open ${tract.neighborhood}`}>
+          <span className="phila-docked-cbs" style={{ color: cbsColor }}>
+            {tract.cbs}<span style={{ fontSize: '0.6em', opacity: 0.6 }}>/10</span>
           </span>
-        </span>
-      </button>
-      <button
-        className="phila-btn phila-btn-secondary"
-        style={{ flex: 'none', padding: '3px 8px', fontSize: 11 }}
-        onClick={onUnpin}
-        title="Unpin"
-        aria-label="Unpin"
-      >✕</button>
+          <span className="phila-docked-info">
+            <span className="phila-docked-name">{tract.neighborhood}</span>
+            <span className="phila-insight-badge" style={{ ...badgeStyle, fontSize: 10, padding: '1px 6px', borderRadius: 8, fontWeight: 700 }}>
+              {insight.badge.label}
+            </span>
+          </span>
+        </button>
+        <button
+          className="phila-btn phila-btn-secondary"
+          style={{ flex: 'none', padding: '3px 8px', fontSize: 11 }}
+          onClick={onUnpin}
+          title="Unpin"
+          aria-label="Unpin"
+        >✕</button>
+      </div>
+
+      {narrationLoading && (
+        <p className="phila-narration phila-narration--loading" aria-live="polite">
+          Analyzing…
+        </p>
+      )}
+      {showNarration && !narrationLoading && (
+        <p className="phila-narration" aria-live="polite">
+          {narration.text}
+        </p>
+      )}
+      {narrationError && !narrationLoading && !showNarration && (
+        <p className="phila-narration phila-narration--fallback" aria-live="polite">
+          {insight.resident}
+        </p>
+      )}
     </div>
   );
 }
