@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useMapStore } from '../store/useMapStore';
 import { PHILADELPHIA_BUILDINGS } from '../data/philadelphiaBuildings';
 import { PHILADELPHIA_TRACTS } from '../data/philadelphiaTracts';
+import DataStamp from './DataStamp';
 
 const TOTAL_RD = PHILADELPHIA_BUILDINGS.reduce((s, b) => s + (b.rdSpend || 0), 0);
 const TOTAL_DEALS = PHILADELPHIA_BUILDINGS.reduce((s, b) => s + (b.dealCount || 0), 0);
@@ -54,7 +55,7 @@ export default function RegionSnapshot() {
       <div className="phila-panel-topbar">
         <div className="phila-region-header" style={{ flex: 1, marginBottom: 0 }}>
           <span className="phila-region-city">Philadelphia, PA</span>
-          <span className="phila-sample-badge">sample data</span>
+          <DataStamp sourceId="syntheticSeed" />
         </div>
         <button
           className="phila-icon-btn"

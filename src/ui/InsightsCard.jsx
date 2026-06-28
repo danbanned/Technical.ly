@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useMapStore } from '../store/useMapStore';
 import { findTopGaps } from '../core/cbs';
+import DataStamp from './DataStamp';
 
 export default function InsightsCard() {
   const tracts = useMapStore((s) => s.philaTractsWithCBS);
@@ -92,6 +93,7 @@ export default function InsightsCard() {
           <span className="phila-gap-cbs">CBS {tract.cbs}</span>
         </div>
       ))}
+      <DataStamp sourceId="syntheticSeed" style={{ marginTop: 8 }} />
     </div>
   );
 
