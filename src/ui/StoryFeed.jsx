@@ -113,8 +113,8 @@ export default function StoryFeed() {
 
   return (
     <>
-      {/* Floating reopen button — visible only when feed is closed */}
-      {!feedOpen && (
+      {/* Floating reopen button — visible whenever the feed isn't on screen */}
+      {(!feedOpen || !browsing) && (
         <button
           className="phila-feed-reopen-btn"
           onClick={handleOpen}
