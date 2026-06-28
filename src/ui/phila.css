@@ -1806,3 +1806,55 @@
 .phila-story-card:focus-visible .phila-story-cta {
   opacity: 1;
 }
+
+/* ── Feed open / close buttons ──────────────────────────────────────── */
+
+.phila-story-feed-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.phila-feed-close-btn {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.phila-feed-close-btn:hover {
+  background: rgba(255,255,255,0.15);
+  color: #e2e8f0;
+}
+
+.phila-feed-reopen-btn {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 120;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(0, 209, 255, 0.35);
+  border-radius: 20px;
+  color: #00d1ff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 8px 20px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.phila-feed-reopen-btn:hover {
+  background: rgba(0, 209, 255, 0.15);
+  border-color: rgba(0, 209, 255, 0.7);
+  color: #fff;
+}

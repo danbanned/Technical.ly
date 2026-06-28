@@ -1,7 +1,7 @@
 /**
  * StoryFeed — center-column article feed overlay.
  *
- * Browsing state  (activeInsight === null):
+ * Browsing state  (activeInsight === null && feedOpen):
  *   Semi-opaque scrim dims the map canvas. Feed cards sit center stage.
  *
  * Selected state  (activeInsight !== null):
@@ -9,12 +9,12 @@
  *   The existing DockedInsight in InspectPanel handles the docked context strip.
  *   StoryFeed renders nothing further — no parallel state system.
  *
- * State is driven entirely through selectPhilaTract / clearActiveInsight so
- * the billboard, highlight, narration, and InspectPanel all fire automatically.
+ * Closed state  (!feedOpen):
+ *   Floating "☰ Stories" button reopens the feed (also clears any selection).
  */
 
 import * as Cesium from 'cesium';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMapStore } from '../store/useMapStore';
 import { seedArticlesFromTracts } from '../data/feedArticles';
 import DataStamp from './DataStamp';
@@ -70,17 +70,17 @@ function StoryCard({ article, onSelect }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function StoryFeed() {
-  const tracts          = useMapStore((s) => s.philaTractsWithCBS) ?? [];
-  const viewer          = useMapStore((s) => s.viewer);
-  const activeInsight   = useMapStore((s) => s.activeInsight);
+  const tracts             = useMapStore((s) => s.philaTractsWithCBS) ?? [];
+  const viewer             = useMapStore((s) => s.viewer);
+  const activeInsight      = useMapStore((s) => s.activeInsight);
   const selectPhilaTract   = useMapStore((s) => s.selectPhilaTract);
   const clearActiveInsight = useMapStore((s) => s.clearActiveInsight);
 
+  const [feedOpen, setFeedOpen] = useState(true);
+
   const articles = useMemo(() => seedArticlesFromTracts(tracts), [tracts]);
 
-  // Esc closes the selected state → returns to browsing feed.
-  // InspectPanel's Esc only fires when the panel is in expanded (full-screen) mode,
-  // so there's no conflict.
+  // Esc while a tract is selected returns to the browsing feed.
   useEffect(() => {
     if (!activeInsight) return;
     const handler = (e) => { if (e.key === 'Escape') clearActiveInsight(); };
@@ -88,16 +88,17 @@ export default function StoryFeed() {
     return () => window.removeEventListener('keydown', handler);
   }, [activeInsight, clearActiveInsight]);
 
-  // Nothing to show until tracts are computed
   if (!articles.length) return null;
 
   const browsing = !activeInsight;
 
-  const handleSelect = (article) => {
-    // Wire into the existing tract system — billboard, highlight, narration all fire
-    selectPhilaTract(article.tractId);
+  const handleOpen = () => {
+    clearActiveInsight();
+    setFeedOpen(true);
+  };
 
-    // One-time camera nudge — non-locking, user can immediately pan/zoom away
+  const handleSelect = (article) => {
+    selectPhilaTract(article.tractId);
     if (!viewer) return;
     viewer.camera.flyTo({
       destination: Cesium.Cartesian3.fromDegrees(
@@ -105,47 +106,63 @@ export default function StoryFeed() {
         article.centroid[1],
         1200,
       ),
-      orientation: {
-        heading: 0,
-        pitch: Cesium.Math.toRadians(-35),
-        roll: 0,
-      },
+      orientation: { heading: 0, pitch: Cesium.Math.toRadians(-35), roll: 0 },
       duration: 1.8,
     });
   };
 
   return (
     <>
-      {/* Scrim — over canvas, under rails/panels. Dims while browsing, lifts on select. */}
-      <div
-        className={`phila-map-scrim${browsing ? '' : ' phila-map-scrim--hidden'}`}
-        aria-hidden="true"
-      />
-
-      {/* Browsing feed — only shown before an article is selected */}
-      {browsing && (
-        <section
-          className="phila-story-feed"
-          aria-label="Neighborhood stories"
+      {/* Floating reopen button — visible only when feed is closed */}
+      {!feedOpen && (
+        <button
+          className="phila-feed-reopen-btn"
+          onClick={handleOpen}
+          aria-label="Show neighborhood stories"
         >
-          <header className="phila-story-feed-header phila-panel">
-            <h2 className="phila-story-feed-title">Philadelphia Neighborhoods</h2>
-            <p className="phila-story-feed-sub">
-              Each story is drawn from real census tract data.
-              Select one to explore it on the map.
-            </p>
-          </header>
+          ☰ Stories
+        </button>
+      )}
 
-          <div className="phila-story-list" role="list">
-            {articles.map((article) => (
-              <StoryCard
-                key={article.tractId}
-                article={article}
-                onSelect={handleSelect}
-              />
-            ))}
-          </div>
-        </section>
+      {feedOpen && (
+        <>
+          {/* Scrim — dims map while browsing, lifts on select */}
+          <div
+            className={`phila-map-scrim${browsing ? '' : ' phila-map-scrim--hidden'}`}
+            aria-hidden="true"
+          />
+
+          {browsing && (
+            <section className="phila-story-feed" aria-label="Neighborhood stories">
+              <header className="phila-story-feed-header phila-panel">
+                <div className="phila-story-feed-header-row">
+                  <h2 className="phila-story-feed-title">Philadelphia Neighborhoods</h2>
+                  <button
+                    className="phila-feed-close-btn"
+                    onClick={() => setFeedOpen(false)}
+                    aria-label="Hide neighborhood stories"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="phila-story-feed-sub">
+                  Each story is drawn from real census tract data.
+                  Select one to explore it on the map.
+                </p>
+              </header>
+
+              <div className="phila-story-list" role="list">
+                {articles.map((article) => (
+                  <StoryCard
+                    key={article.tractId}
+                    article={article}
+                    onSelect={handleSelect}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
     </>
   );
