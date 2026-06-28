@@ -128,6 +128,8 @@ export default function PhiladelphiaLayers({ viewer }) {
   const philaBuildingHeightScale = useMapStore((s) => s.philaBuildingHeightScale);
   const philaEconomicColor = useMapStore((s) => s.philaEconomicColor);
   const philaEnrichedBuildings = useMapStore((s) => s.philaEnrichedBuildings);
+  const activeInsight = useMapStore((s) => s.activeInsight);
+  const tractHighlightRef = useRef(null);
 
   // Compute CBS once on mount and push to store
   useEffect(() => {
@@ -219,6 +221,34 @@ export default function PhiladelphiaLayers({ viewer }) {
       entity.polygon.extrudedHeight = origEH * philaBuildingHeightScale;
     });
   }, [philaBuildingHeightScale]);
+
+  // Active insight — polygon highlight ring around the pinned tract
+  useEffect(() => {
+    if (!viewer || viewer.isDestroyed()) return;
+
+    // Remove previous highlight
+    if (tractHighlightRef.current) {
+      if (!viewer.isDestroyed()) viewer.entities.remove(tractHighlightRef.current);
+      tractHighlightRef.current = null;
+    }
+
+    if (!activeInsight?.polygon) return;
+
+    const positions = [...activeInsight.polygon, activeInsight.polygon[0]]
+      .map(([lon, lat]) => Cesium.Cartesian3.fromDegrees(lon, lat, 30));
+
+    tractHighlightRef.current = viewer.entities.add({
+      polyline: {
+        positions,
+        width: 3,
+        material: new Cesium.ColorMaterialProperty(
+          Cesium.Color.fromCssColorString('#FFD600').withAlpha(0.95)
+        ),
+        clampToGround: false,
+        arcType: Cesium.ArcType.NONE,
+      },
+    });
+  }, [activeInsight, viewer]);
 
   // Update tract colors when CB-safe mode toggles.
   // CallbackProperty closures can't be patched in-place, so we remove and recreate

@@ -155,6 +155,7 @@ export default function PhilaCesiumMap() {
   const osmTilesetRef          = useRef(null);
   const googleTilesetRef       = useRef(null);
   const enrichedTilesetRef     = useRef(null);
+  const activeBillboardRef     = useRef(null);
   const [ready, setReady] = useState(false);
 
   const setViewer               = useMapStore((s) => s.setViewer);
@@ -165,6 +166,7 @@ export default function PhilaCesiumMap() {
   const philaEconomicColor      = useMapStore((s) => s.philaEconomicColor);
   const philaHeightDebug        = useMapStore((s) => s.philaHeightDebug);
   const philaFilterColor        = useMapStore((s) => s.philaFilterColor);
+  const activeInsight           = useMapStore((s) => s.activeInsight);
 
   // ── Viewer initialisation ────────────────────────────────────────────────
   useEffect(() => {
@@ -235,7 +237,7 @@ export default function PhilaCesiumMap() {
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
       const store = useMapStore.getState();
-      store.selectPhilaTract(null);
+      store.clearActiveInsight();
       store.selectPhilaBuilding(null);
       store.clearPhilaCompare();
     };
@@ -366,6 +368,46 @@ export default function PhilaCesiumMap() {
     if (!enrichedTilesetRef.current) return;
     enrichedTilesetRef.current.style = pickEnrichedStyle(philaEconomicColor, philaHeightDebug, philaFilterColor);
   }, [philaEconomicColor, philaHeightDebug, philaFilterColor]);
+
+  // ── Active insight billboard ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!ready) return;
+    const viewer = viewerRef.current;
+    if (!viewer || viewer.isDestroyed()) return;
+
+    // Remove previous billboard
+    if (activeBillboardRef.current) {
+      if (!viewer.isDestroyed()) viewer.entities.remove(activeBillboardRef.current);
+      activeBillboardRef.current = null;
+    }
+
+    if (!activeInsight?.centroid) return;
+
+    const [lon, lat] = activeInsight.centroid;
+    const cbsColor = activeInsight.cbs >= 7 ? '#4caf50'
+                   : activeInsight.cbs >= 4 ? '#ffa726'
+                   : '#ef5350';
+
+    activeBillboardRef.current = viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(lon, lat, 250),
+      label: {
+        text: `${activeInsight.neighborhood}\nCBS ${activeInsight.cbs ?? '—'} / 10`,
+        font: 'bold 14px system-ui, sans-serif',
+        fillColor: Cesium.Color.fromCssColorString(cbsColor),
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 4,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        showBackground: true,
+        backgroundColor: new Cesium.Color(0.04, 0.06, 0.14, 0.92),
+        backgroundPadding: new Cesium.Cartesian2(14, 9),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        pixelOffset: new Cesium.Cartesian2(0, -12),
+        scaleByDistance: new Cesium.NearFarScalar(500, 1.1, 8000, 0.7),
+      },
+    });
+  }, [activeInsight, ready]);
 
   // Dim basemap when economic color mode is on so colored buildings pop
   useEffect(() => {

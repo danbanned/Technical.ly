@@ -1337,6 +1337,58 @@
   line-height: 1.5;
 }
 
+/* ── Docked inspect panel (pinned insight, collapsed) ───────────── */
+.phila-inspect-panel--docked {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 6px 10px;
+  gap: 8px;
+  animation: phila-fade-in 0.2s ease;
+}
+
+.phila-docked-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  min-width: 0;
+}
+
+.phila-docked-body:hover .phila-docked-name {
+  color: #e2e8f0;
+}
+
+.phila-docked-cbs {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  flex: none;
+}
+
+.phila-docked-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.phila-docked-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s;
+}
+
 /* ── Economic legend — interactive (filter + expand + hover) ────── */
 
 .phila-legend-panel--economic {

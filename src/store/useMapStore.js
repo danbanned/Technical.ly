@@ -174,6 +174,7 @@ export const useMapStore = create((set, get) => ({
   philaHeightDebug: false,
   philaFilterColor: null,
   philaLegendExpanded: false,
+  activeInsight: null,          // pinned tract object | null
   philaBuildingHeightScale: 1,
   philaSelectedTract: null,
   philaSelectedBuilding: null,
@@ -202,13 +203,21 @@ export const useMapStore = create((set, get) => ({
 
   setPhilaLegendExpanded: (flag) => set({ philaLegendExpanded: flag }),
 
+  setActiveInsight: (tract) => set({ activeInsight: tract }),
+  clearActiveInsight: () => set({ activeInsight: null, philaSelectedTract: null }),
+
   setPhilaBuildingHeightScale: (scale) => set({ philaBuildingHeightScale: scale }),
 
   selectPhilaTract: (tractIdOrNull) =>
     set((s) => {
       if (!tractIdOrNull) return { philaSelectedTract: null };
       const tract = s.philaTractsWithCBS.find((t) => t.id === tractIdOrNull);
-      return { philaSelectedTract: tract ?? null, philaSelectedBuilding: null };
+      return {
+        philaSelectedTract: tract ?? null,
+        philaSelectedBuilding: null,
+        // Pin as active insight — persists (as docked card) after clicking away
+        activeInsight: tract ?? s.activeInsight,
+      };
     }),
 
   selectPhilaBuilding: (idxOrNull) =>

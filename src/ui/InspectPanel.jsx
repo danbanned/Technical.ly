@@ -234,12 +234,42 @@ function BuildingInspect({ building }) {
   );
 }
 
+function DockedInsight({ tract, onUnpin, onExpand }) {
+  const insight = buildTractInsightFromStore(tract);
+  const cbsColor = tract.cbs >= 7 ? '#4caf50' : tract.cbs >= 4 ? '#ffa726' : '#ef5350';
+  const badgeStyle = BADGE_STYLE[insight.badge.tone] ?? BADGE_STYLE.neutral;
+  return (
+    <div className="phila-panel phila-inspect-panel phila-inspect-panel--docked" role="complementary" aria-label="Pinned insight">
+      <button className="phila-docked-body" onClick={onExpand} aria-label={`Re-open ${tract.neighborhood}`}>
+        <span className="phila-docked-cbs" style={{ color: cbsColor }}>
+          {tract.cbs}<span style={{ fontSize: '0.6em', opacity: 0.6 }}>/10</span>
+        </span>
+        <span className="phila-docked-info">
+          <span className="phila-docked-name">{tract.neighborhood}</span>
+          <span className="phila-insight-badge" style={{ ...badgeStyle, fontSize: 10, padding: '1px 6px', borderRadius: 8, fontWeight: 700 }}>
+            {insight.badge.label}
+          </span>
+        </span>
+      </button>
+      <button
+        className="phila-btn phila-btn-secondary"
+        style={{ flex: 'none', padding: '3px 8px', fontSize: 11 }}
+        onClick={onUnpin}
+        title="Unpin"
+        aria-label="Unpin"
+      >✕</button>
+    </div>
+  );
+}
+
 export default function InspectPanel() {
-  const tract = useMapStore((s) => s.philaSelectedTract);
-  const building = useMapStore((s) => s.philaSelectedBuilding);
-  const viewer = useMapStore((s) => s.viewer);
-  const clearTract = () => useMapStore.getState().selectPhilaTract(null);
-  const clearBuilding = () => useMapStore.getState().selectPhilaBuilding(null);
+  const tract          = useMapStore((s) => s.philaSelectedTract);
+  const building       = useMapStore((s) => s.philaSelectedBuilding);
+  const activeInsight  = useMapStore((s) => s.activeInsight);
+  const viewer         = useMapStore((s) => s.viewer);
+  const clearActiveInsight = useMapStore((s) => s.clearActiveInsight);
+  const clearTract     = () => useMapStore.getState().selectPhilaTract(null);
+  const clearBuilding  = () => useMapStore.getState().selectPhilaBuilding(null);
   const [expanded, setExpanded] = useState(false);
 
   const toggleExpanded = useCallback(() => {
@@ -261,15 +291,24 @@ export default function InspectPanel() {
     return () => window.removeEventListener('keydown', handler);
   }, [expanded, collapse]);
 
-  // Re-enable inputs if panel closes while expanded
+  // Re-enable inputs if panel closes while expanded (docked mode doesn't count as expanded)
   useEffect(() => {
-    if (!tract && !building && expanded) {
+    if (!tract && !building && !activeInsight && expanded) {
       setExpanded(false);
       if (viewer) viewer.scene.screenSpaceCameraController.enableInputs = true;
     }
-  }, [tract, building, expanded, viewer]);
+  }, [tract, building, activeInsight, expanded, viewer]);
 
-  if (!tract && !building) return null;
+  if (!tract && !building) {
+    if (!activeInsight) return null;
+    return (
+      <DockedInsight
+        tract={activeInsight}
+        onUnpin={clearActiveInsight}
+        onExpand={() => useMapStore.getState().selectPhilaTract(activeInsight.id)}
+      />
+    );
+  }
 
   const panelContent = (
     <div
