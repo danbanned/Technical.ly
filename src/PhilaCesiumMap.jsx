@@ -202,9 +202,16 @@ export default function PhilaCesiumMap() {
     cartoLayerRef.current = cartoLayer;
 
     viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#0f172a');
-    viewer.scene.globe.showGroundAtmosphere = false;
-    viewer.scene.skyAtmosphere.show = false;
+    viewer.scene.globe.showGroundAtmosphere = true;
+    viewer.scene.globe.enableLighting = true;
+    viewer.scene.skyAtmosphere.show = true;
+    viewer.scene.sun.show = true;
+    viewer.scene.moon.show = false;
     viewer.scene.fog.enabled = false;
+
+    // Seed clock to real local time — frozen snapshot, no animation loop
+    viewer.clock.currentTime = Cesium.JulianDate.fromDate(new Date());
+    viewer.clock.shouldAnimate = false;
     viewer.scene.screenSpaceCameraController.minimumZoomDistance = 150;
     viewer.scene.screenSpaceCameraController.maximumZoomDistance = 40000;
 
