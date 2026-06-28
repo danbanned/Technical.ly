@@ -30,6 +30,7 @@ const OUTCOME_HIGH     = 0.55;
 
 /* ── guard: language that is OFF-DOC and must never appear in output ─────── */
 const BANNED_PATTERNS = [
+  // Predictive / investment-advice language
   /\bwill (go up|rise|increase|grow|appreciate)\b/i,
   /\bprices? (will|are going|should)\b/i,
   /\bbuy (here|now|a house|property)\b/i,
@@ -40,6 +41,14 @@ const BANNED_PATTERNS = [
   /\bflip\b/i,
   /\bguaranteed\b/i,
   /\byou(?:'ll| will) (profit|make money|see gains)\b/i,
+
+  // Staleness false-update language — AI must report data age, never claim to have changed it.
+  // Pattern 1: "I've updated / I have refreshed / I corrected ..."
+  /\bI(?:'ve| have) (?:updated|refreshed|corrected|revised|fixed)\b/i,
+  // Pattern 2: "I updated / I corrected / I fixed ..." — any direct-past claim of AI agency
+  /\bI (?:just |now )?(?:updated|corrected|fixed|changed|revised|refreshed)\b/i,
+  // Pattern 3: "data has been updated to reflect / as of today" (AI-caused update framing)
+  /\b(?:data|figures?|numbers?) (?:has|have) been (?:updated|refreshed|corrected) (?:to reflect|as of)\b/i,
 ];
 
 /**
@@ -51,7 +60,7 @@ export function assertDocAligned(...strings) {
     if (typeof s !== 'string') continue;
     for (const re of BANNED_PATTERNS) {
       if (re.test(s)) {
-        throw new Error(`insightEngine: off-doc (predictive/investment) phrasing detected: "${s}"`);
+        throw new Error(`insightEngine: off-doc (predictive/investment/false-update) phrasing detected: "${s}"`);
       }
     }
   }
