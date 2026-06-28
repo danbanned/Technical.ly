@@ -10,6 +10,7 @@ import InsightsCard from './ui/InsightsCard';
 import CompareMode from './ui/CompareMode';
 import TractList from './ui/TractList';
 import Legend from './ui/Legend';
+import ErrorBoundary from './ui/ErrorBoundary';
 import './ui/phila.css';
 
 /**
@@ -20,7 +21,7 @@ import './ui/phila.css';
  */
 export default function PhiladelphiaApp() {
   const viewer = useMapStore((s) => s.viewer);
-  const tractsWithCBS = useMapStore((s) => s.philaTractsWithCBS);
+  const tractsWithCBS = useMapStore((s) => s.philaTractsWithCBS) ?? [];
   const hasAutoSelected = useRef(false);
 
   // Start AI narration pipeline — fires on every activeInsight change
@@ -53,14 +54,22 @@ export default function PhiladelphiaApp() {
       {/* Left rail: layer controls + tract keyboard selector */}
       <aside className="phila-left-rail" aria-label="Map controls">
         <LayerToggles />
-        <TractList />
+        <ErrorBoundary fallback="Tract list unavailable.">
+          <TractList />
+        </ErrorBoundary>
       </aside>
 
       {/* Right rail: city overview + inspect / insights */}
       <aside className="phila-right-rail" aria-label="Data panels">
-        <RegionSnapshot />
-        <InspectPanel />
-        <InsightsCard />
+        <ErrorBoundary fallback="City overview unavailable.">
+          <RegionSnapshot />
+        </ErrorBoundary>
+        <ErrorBoundary fallback="Inspect panel unavailable.">
+          <InspectPanel />
+        </ErrorBoundary>
+        <ErrorBoundary fallback="Insights unavailable.">
+          <InsightsCard />
+        </ErrorBoundary>
       </aside>
 
       {/* Compare mode — overlaid modal-style */}

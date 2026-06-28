@@ -25,7 +25,7 @@ function MobilityRating({ score }) {
 }
 
 export default function RegionSnapshot() {
-  const tractsWithCBS = useMapStore((s) => s.philaTractsWithCBS);
+  const tractsWithCBS = useMapStore((s) => s.philaTractsWithCBS) ?? [];
   const viewer = useMapStore((s) => s.viewer);
   const mismatchCount = tractsWithCBS.filter((t) => t.mismatchAlert).length;
   const hasCBS = tractsWithCBS.length > 0;

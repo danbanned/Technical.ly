@@ -6,7 +6,7 @@ import { findTopGaps } from '../core/cbs';
 import DataStamp from './DataStamp';
 
 export default function InsightsCard() {
-  const tracts = useMapStore((s) => s.philaTractsWithCBS);
+  const tracts = useMapStore((s) => s.philaTractsWithCBS) ?? [];
   const viewer = useMapStore((s) => s.viewer);
   const selectPhilaTract = useMapStore((s) => s.selectPhilaTract);
   const philaSelectedTract = useMapStore((s) => s.philaSelectedTract);

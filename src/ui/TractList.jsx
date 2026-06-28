@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useMapStore } from '../store/useMapStore';
 
 export default function TractList() {
-  const tracts = useMapStore((s) => s.philaTractsWithCBS);
+  const tracts = useMapStore((s) => s.philaTractsWithCBS) ?? [];
   const selected = useMapStore((s) => s.philaSelectedTract);
   const viewer = useMapStore((s) => s.viewer);
   const selectPhilaTract = useMapStore((s) => s.selectPhilaTract);
