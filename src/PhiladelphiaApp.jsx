@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+// no react hooks needed at this level — state lives in child components
 import { useMapStore } from './store/useMapStore';
 import { useNarration } from './hooks/useNarration';
 import PhilaCesiumMap from './PhilaCesiumMap';
@@ -10,6 +10,7 @@ import InsightsCard from './ui/InsightsCard';
 import CompareMode from './ui/CompareMode';
 import TractList from './ui/TractList';
 import Legend from './ui/Legend';
+import StoryFeed from './ui/StoryFeed';
 import ErrorBoundary from './ui/ErrorBoundary';
 import './ui/phila.css';
 
@@ -21,19 +22,9 @@ import './ui/phila.css';
  */
 export default function PhiladelphiaApp() {
   const viewer = useMapStore((s) => s.viewer);
-  const tractsWithCBS = useMapStore((s) => s.philaTractsWithCBS) ?? [];
-  const hasAutoSelected = useRef(false);
 
   // Start AI narration pipeline — fires on every activeInsight change
   useNarration();
-
-  // Pre-open Mantua (Tract 172) after CBS computes — shows mismatch story
-  useEffect(() => {
-    if (tractsWithCBS.length > 0 && !hasAutoSelected.current) {
-      hasAutoSelected.current = true;
-      useMapStore.getState().selectPhilaTract('42101017200');
-    }
-  }, [tractsWithCBS]);
 
   return (
     <div className="phila-app">
@@ -71,6 +62,11 @@ export default function PhiladelphiaApp() {
           <InsightsCard />
         </ErrorBoundary>
       </aside>
+
+      {/* Center feed — browsing overlay + map scrim (managed internally) */}
+      <ErrorBoundary fallback="Stories unavailable.">
+        <StoryFeed />
+      </ErrorBoundary>
 
       {/* Compare mode — overlaid modal-style */}
       <CompareMode />

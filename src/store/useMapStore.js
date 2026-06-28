@@ -42,11 +42,11 @@ export const useMapStore = create((set, get) => ({
   setViewer: (viewer) => set({ viewer }),
 
   // ───────────── Immersion state machine ─────────────
+  // articles / activeArticleId / registerArticle / setActiveArticle removed —
+  // exclusively served the old editorial ArticleFeed, retired with that component.
   immersionMode: 'ambient',          // 'ambient' | 'reactive' | 'immersive'
   previousImmersionMode: null,        // for returning from immersive
   focusedCity: null,                  // { name, lat, lon, articleId }
-  activeArticleId: null,              // ID of article most visible in viewport
-  articles: [],                       // [{ id, city, lat, lon, layers[] }]
   isTransitioning: false,
   transitionQueue: [],
 
@@ -73,14 +73,6 @@ export const useMapStore = create((set, get) => ({
     set({ immersionMode: mode }),
 
   setFocusedCity: (city) => set({ focusedCity: city }),
-
-  setActiveArticle: (articleId) => set({ activeArticleId: articleId }),
-
-  registerArticle: (article) =>
-    set((s) => {
-      if (s.articles.some((a) => a.id === article.id)) return s;
-      return { articles: [...s.articles, article] };
-    }),
 
   setIsTransitioning: (flag) => set({ isTransitioning: flag }),
 
