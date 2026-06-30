@@ -1,3 +1,8 @@
+// Data-freshness stamp for this file — matches DATA_SOURCES.syntheticSeed in config.js.
+// A real pipeline would overwrite this on each ingest run.
+export const TRACTS_DATA_SOURCE = 'syntheticSeed';
+export const TRACTS_LAST_UPDATED = '2024-01-15';
+
 export const PHILADELPHIA_TRACTS = [
   {
     id: '42101008700',

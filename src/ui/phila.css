@@ -1836,13 +1836,12 @@
 
 .phila-feed-reopen-btn {
   position: fixed;
-  bottom: 28px;
+  bottom: 180px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 120;
-  background: rgba(15, 23, 42, 0.92);
-  border: 1px solid rgba(0, 209, 255, 0.35);
-  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.92);
+  border: 1px solid rgba(15, 15, 15, 0);
   color: #00d1ff;
   font-size: 13px;
   font-weight: 600;
