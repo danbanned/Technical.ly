@@ -13,3 +13,4 @@ dist-ssr
 enriched_buildings.geojson
 *.gpkg
 cache/
+*.osm.pbf

@@ -7,6 +7,19 @@ const HAS_ION_TOKEN    = !!import.meta.env.VITE_CESIUM_ION_TOKEN;
 const GOOGLE_API_KEY   = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const HAS_GOOGLE_KEY   = !!GOOGLE_API_KEY;
 
+// ── TEMP tile debugging — remove once the 503 is confirmed fixed ─────────────
+const maskKey = (k) => (k ? `${k.slice(0, 6)}…${k.slice(-4)} (${k.length} chars)` : 'MISSING');
+function logTilesetFailures(tileset, label) {
+  tileset.tileFailed.addEventListener((e) =>
+    console.error(`[TileDebug] ${label} tile failed:`, e.url, '→', e.message));
+}
+console.info('[TileDebug] env at runtime:', {
+  VITE_GOOGLE_MAPS_API_KEY: maskKey(import.meta.env.VITE_GOOGLE_MAPS_API_KEY),
+  VITE_CESIUM_ION_TOKEN: import.meta.env.VITE_CESIUM_ION_TOKEN ? 'set' : 'MISSING',
+  VITE_ENABLE_NARRATION: import.meta.env.VITE_ENABLE_NARRATION ?? 'unset (narration off)',
+  CESIUM_BASE_URL: window.CESIUM_BASE_URL ?? '(derived from /cesium/Cesium.js script src)',
+});
+
 // ── Enriched buildings style builders ────────────────────────────────────────
 //
 // Property names as exported by enrich_buildings.py:
@@ -187,18 +200,44 @@ export default function PhilaCesiumMap() {
       infoBox: false,
       selectionIndicator: false,
       terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+      // No default Bing imagery via ion (asset 2) — we add our own basemap below.
+      baseLayer: false,
+      // Ask for the discrete GPU on laptops with two graphics chips.
+      contextOptions: { webgl: { powerPreference: 'high-performance' } },
+    });
+
+    // If the GPU runs out of memory, say so once instead of spamming errors.
+    viewer.scene.renderError.addEventListener((_scene, err) =>
+      console.error('[Cesium] Rendering stopped:', err?.message ?? err,
+        '— likely GPU memory. Turn off 3D building layers and reload.'));
+    viewer.scene.canvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      console.error('[Cesium] WebGL context lost (GPU out of memory). Reload the page.');
     });
 
     // CartoDB Voyager — free basemap with labels + roads
     viewer.imageryLayers.removeAll();
-    const cartoLayer = viewer.imageryLayers.addImageryProvider(
-      new Cesium.UrlTemplateImageryProvider({
-        url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        subdomains: ['a', 'b', 'c', 'd'],
-        credit: '© CartoDB • © OpenStreetMap contributors',
-        maximumLevel: 19,
-      })
-    );
+    // Basemap. CARTO watermarks keyless tiles ("API KEY REQUIRED") since Aug 2026.
+    // With VITE_CARTO_API_KEY set → CARTO Voyager (keyed). Without it → Esri
+    // World Street Map, which needs no key.
+    const CARTO_KEY = import.meta.env.VITE_CARTO_API_KEY;
+    const cartoProvider = CARTO_KEY
+      ? new Cesium.UrlTemplateImageryProvider({
+          url: `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`,
+          subdomains: ['a', 'b', 'c', 'd'],
+          credit: '© CARTO • © OpenStreetMap contributors',
+          maximumLevel: 19,
+        })
+      : new Cesium.UrlTemplateImageryProvider({
+          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+          credit: 'Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors',
+          maximumLevel: 19,
+        });
+    console.info('[TileDebug] basemap:', CARTO_KEY ? 'CARTO Voyager (keyed)' : 'Esri World Street Map (no key)');
+    // TEMP: log the exact basemap tile that fails
+    cartoProvider.errorEvent.addEventListener((err) =>
+      console.error(`[TileDebug] basemap tile failed z=${err.level} x=${err.x} y=${err.y}:`, err.message));
+    const cartoLayer = viewer.imageryLayers.addImageryProvider(cartoProvider);
     cartoLayerRef.current = cartoLayer;
 
     viewer.scene.globe.baseColor = Cesium.Color.fromCssColorString('#0f172a');
@@ -277,7 +316,8 @@ export default function PhilaCesiumMap() {
             tileset.destroy();
             return;
           }
-          tileset.maximumScreenSpaceError = 2;
+          tileset.maximumScreenSpaceError = 16; // was 2: very high detail, heavy on GPU
+          logTilesetFailures(tileset, 'OSM Buildings (ion)');
           viewerRef.current.scene.primitives.add(tileset);
           osmTilesetRef.current = tileset;
         })
@@ -311,13 +351,17 @@ export default function PhilaCesiumMap() {
     if (!viewer || viewer.isDestroyed()) return;
 
     if (philaGoogleTiles) {
-      Cesium.Cesium3DTileset.fromUrl(
-        `https://tile.googleapis.com/v1/3dtiles/root.json?key=${GOOGLE_API_KEY}&session=`
-      ).catch(() =>
-        // Fallback without session param
-        Cesium.Cesium3DTileset.fromUrl(
-          `https://tile.googleapis.com/v1/3dtiles/root.json?key=${GOOGLE_API_KEY}`
-        )
+      // Explicit key → requests go straight to tile.googleapis.com.
+      // (With no key, Cesium falls back to ion asset 2275207 via ion's proxy.)
+      console.info('[TileDebug] Google 3D Tiles init — key loaded:', maskKey(GOOGLE_API_KEY));
+      Cesium.createGooglePhotorealistic3DTileset(
+        { key: GOOGLE_API_KEY, onlyUsingWithGoogleGeocoder: true },
+        {
+          maximumScreenSpaceError: 16,
+          // Cesium's Google default cache is 1.5 GB + 1 GB overflow — too much for laptop GPUs.
+          cacheBytes: 256 * 1024 * 1024,
+          maximumCacheOverflowBytes: 128 * 1024 * 1024,
+        }
       ).then((tileset) => {
         if (!viewerRef.current || viewerRef.current.isDestroyed()) {
           tileset.destroy();
@@ -325,10 +369,10 @@ export default function PhilaCesiumMap() {
         }
         // Google tiles include their own imagery — hide CartoDB to avoid z-fighting
         if (cartoLayerRef.current) cartoLayerRef.current.show = false;
-        tileset.maximumScreenSpaceError = 8;
+        logTilesetFailures(tileset, 'Google 3D Tiles');
         viewerRef.current.scene.primitives.add(tileset);
         googleTilesetRef.current = tileset;
-      }).catch((err) => console.warn('[Google 3D Tiles]', err.message));
+      }).catch((err) => console.warn('[Google 3D Tiles] init failed:', err?.message ?? err));
     } else {
       if (googleTilesetRef.current && !viewer.isDestroyed()) {
         viewer.scene.primitives.remove(googleTilesetRef.current);
@@ -355,9 +399,10 @@ export default function PhilaCesiumMap() {
             tileset.destroy();
             return;
           }
-          tileset.maximumScreenSpaceError = 4;
+          tileset.maximumScreenSpaceError = 8;
           tileset.style = pickEnrichedStyle(philaEconomicColor, philaHeightDebug, philaFilterColor);
           attachPropertyInspector(tileset);
+          logTilesetFailures(tileset, 'Enriched Buildings (ion 4980304)');
           viewerRef.current.scene.primitives.add(tileset);
           enrichedTilesetRef.current = tileset;
         })

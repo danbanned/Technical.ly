@@ -149,6 +149,12 @@ export class NarrationUnavailableError extends Error {
 }
 
 async function callNarrationAPI(systemPrompt, userPrompt, signal) {
+  // AI narration is off unless explicitly enabled. Without this gate every tract
+  // click POSTs to /api/narrate, which returns 503 when ANTHROPIC_API_KEY is unset.
+  if (import.meta.env.VITE_ENABLE_NARRATION !== 'true') {
+    throw new NarrationUnavailableError('Narration disabled (VITE_ENABLE_NARRATION != "true")');
+  }
+
   // 1. Vercel serverless (key stays server-side; works in production + local dev)
   try {
     const res = await fetch('/api/narrate', {

@@ -179,13 +179,20 @@ export const useMapStore = create((set, get) => ({
 
   setPhilaCBSafeMode: (flag) => set({ philaCBSafeMode: flag }),
 
-  setPhilaOSMBuildings: (flag) => set({ philaOSMBuildings: flag }),
+  // Only one 3D building layer at a time — stacking them exhausts GPU memory.
+  setPhilaOSMBuildings: (flag) => set(flag
+    ? { philaOSMBuildings: true, philaGoogleTiles: false, philaEnrichedBuildings: false }
+    : { philaOSMBuildings: false }),
 
   setPhilaOSMHeightScale: (scale) => set({ philaOSMHeightScale: scale }),
 
-  setPhilaGoogleTiles: (flag) => set({ philaGoogleTiles: flag }),
+  setPhilaGoogleTiles: (flag) => set(flag
+    ? { philaGoogleTiles: true, philaOSMBuildings: false, philaEnrichedBuildings: false }
+    : { philaGoogleTiles: false }),
 
-  setPhilaEnrichedBuildings: (flag) => set({ philaEnrichedBuildings: flag }),
+  setPhilaEnrichedBuildings: (flag) => set(flag
+    ? { philaEnrichedBuildings: true, philaOSMBuildings: false, philaGoogleTiles: false }
+    : { philaEnrichedBuildings: false }),
 
   setPhilaEconomicColor: (flag) => set({ philaEconomicColor: flag }),
 
