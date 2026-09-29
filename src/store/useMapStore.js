@@ -179,9 +179,10 @@ export const useMapStore = create((set, get) => ({
 
   setPhilaCBSafeMode: (flag) => set({ philaCBSafeMode: flag }),
 
-  // Only one 3D building layer at a time — stacking them exhausts GPU memory.
+  // OSM + Enriched can be stacked. Google 3D Tiles is the heavy one (its own
+  // imagery + mesh), so it stays exclusive to avoid exhausting GPU memory.
   setPhilaOSMBuildings: (flag) => set(flag
-    ? { philaOSMBuildings: true, philaGoogleTiles: false, philaEnrichedBuildings: false }
+    ? { philaOSMBuildings: true, philaGoogleTiles: false }
     : { philaOSMBuildings: false }),
 
   setPhilaOSMHeightScale: (scale) => set({ philaOSMHeightScale: scale }),
@@ -191,7 +192,7 @@ export const useMapStore = create((set, get) => ({
     : { philaGoogleTiles: false }),
 
   setPhilaEnrichedBuildings: (flag) => set(flag
-    ? { philaEnrichedBuildings: true, philaOSMBuildings: false, philaGoogleTiles: false }
+    ? { philaEnrichedBuildings: true, philaGoogleTiles: false }
     : { philaEnrichedBuildings: false }),
 
   setPhilaEconomicColor: (flag) => set({ philaEconomicColor: flag }),

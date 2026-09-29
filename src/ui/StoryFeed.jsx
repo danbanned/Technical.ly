@@ -146,7 +146,7 @@ export default function StoryFeed() {
                   </button>
                 </div>
                 <p className="phila-story-feed-sub">
-                  Each story is drawn from real census tract data.
+                  Each story is generated from sample tract data (not real measurements).
                   Select one to explore it on the map.
                 </p>
               </header>

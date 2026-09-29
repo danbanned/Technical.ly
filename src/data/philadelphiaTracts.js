@@ -92,10 +92,12 @@ export const PHILADELPHIA_TRACTS = [
     id: '42101017200',
     name: 'Tract 172',
     neighborhood: 'Mantua',
-    centroid: [-75.2100, 39.9680],
+    // Mantua sits just north of Drexel (≈ 34th–40th St, north of Spring Garden).
+    // Earlier coords were ~1.3 km too far west, outside every anchor's 1.5 km radius.
+    centroid: [-75.1960, 39.9650],
     polygon: [
-      [-75.2220, 39.9780], [-75.1980, 39.9780],
-      [-75.1980, 39.9580], [-75.2220, 39.9580],
+      [-75.2030, 39.9700], [-75.1890, 39.9700],
+      [-75.1890, 39.9600], [-75.2030, 39.9600],
     ],
     medianIncome: 34000,
     unemploymentRate: 0.11,

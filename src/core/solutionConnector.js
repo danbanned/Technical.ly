@@ -2,7 +2,7 @@
  * solutionConnector.js — generates 4 "Solution" recommendations per tract.
  *
  * Priority order:
- *   1. LLM (Claude API via VITE_ANTHROPIC_API_KEY) — cached per tract id
+ *   1. LLM via POST /api/solutions (server-side key; needs VITE_ENABLE_NARRATION=true) — cached per tract id
  *   2. Rule-based fallback keyed on CBS / mismatch type
  *
  * All responses are flagged { aiGenerated: true/false } so the UI can
@@ -131,49 +131,34 @@ function ruleBasedRecs(tract) {
   ];
 }
 
-// ── LLM integration (Claude API) ─────────────────────────────────────────────
-const LLM_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
+// ── LLM integration (server-side via /api/solutions) ─────────────────────────
+// The Anthropic key lives only on the server (ANTHROPIC_API_KEY). Same opt-in
+// flag as narration so a deploy without the key doesn't POST on every click.
+const AI_ENABLED = import.meta.env.VITE_ENABLE_NARRATION === 'true';
 
 async function fetchLLMRecs(tract) {
   const { neighborhood, cbs, innovationIndex, outcomeIndex, medianIncome, unemploymentRate, mobilityScore } = tract;
 
-  const payload = {
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 1024,
-    system: 'You are an economic development advisor for Philadelphia. Based on tract data, suggest 4 concrete local actions. Respond ONLY with a JSON array of exactly 4 objects, each with keys: title (string), description (string), why_it_connects (string), asset_name (string — must be one of the real Philadelphia anchors: Penn Research Tower, Drexel Innovation Hub, Temple Research Center, Jefferson Research Center, Penn Medicine Pavilion, CHOP, Temple University Hospital, Jefferson Health, Center City VC District, UC Science Center, Pennovation Works, Drexel Baiada Institute, 30th Street Station), asset_lat (number), asset_lon (number). No markdown, no prose outside the JSON array.',
-    messages: [
-      {
-        role: 'user',
-        content: `Tract: ${neighborhood}. CBS: ${cbs}/10. Innovation Index: ${(innovationIndex ?? 0).toFixed(2)}. Outcome Index: ${(outcomeIndex ?? 0).toFixed(2)}. Median income: $${medianIncome?.toLocaleString()}. Unemployment: ${((unemploymentRate ?? 0) * 100).toFixed(1)}%. Mobility score: ${mobilityScore}/100. Suggest 4 concrete local actions.`,
-      },
-    ],
-  };
-
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('/api/solutions', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': LLM_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ neighborhood, cbs, innovationIndex, outcomeIndex, medianIncome, unemploymentRate, mobilityScore }),
   });
 
-  if (!res.ok) throw new Error(`Anthropic API ${res.status}`);
-  const data = await res.json();
-  const text = data.content?.[0]?.text ?? '';
-  const recs = JSON.parse(text);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !Array.isArray(data.recs)) {
+    throw new Error(data.error ?? `/api/solutions ${res.status}`);
+  }
 
-  // Validate and fill in real coords from our asset list for any name that matches
-  return recs.map((r) => {
+  // Coordinates always come from our asset list, never from the model
+  return data.recs.map((r) => {
     const building = PHILADELPHIA_BUILDINGS.find(
       (b) => b.name.toLowerCase() === (r.asset_name ?? '').toLowerCase()
     );
     return {
       ...r,
-      asset_lat: building?.lat ?? r.asset_lat,
-      asset_lon: building?.lon ?? r.asset_lon,
+      asset_lat: building?.lat,
+      asset_lon: building?.lon,
     };
   });
 }
@@ -187,7 +172,7 @@ export async function getSolutions(tract) {
   let recs;
   let aiGenerated = false;
 
-  if (LLM_KEY) {
+  if (AI_ENABLED) {
     try {
       recs = await fetchLLMRecs(tract);
       aiGenerated = true;
