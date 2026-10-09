@@ -23,6 +23,8 @@ export default function LayerToggles() {
   const heightDebug        = useMapStore((s) => s.philaHeightDebug);
   const heightScale    = useMapStore((s) => s.philaBuildingHeightScale);
   const connectMode    = useMapStore((s) => s.philaConnectMode);
+  const narrationOn    = useMapStore((s) => s.philaNarration);
+  const setNarration   = useMapStore((s) => s.setPhilaNarration);
   const viewer         = useMapStore((s) => s.viewer);
   const setLayerVisibility = useMapStore((s) => s.setPhilaLayerVisibility);
   const setCBSafe      = useMapStore((s) => s.setPhilaCBSafeMode);
@@ -248,6 +250,21 @@ export default function LayerToggles() {
           Connect mode
           {connectMode && <span className="phila-toggle-hint"> active</span>}
         </span>
+      </label>
+
+      <hr className="phila-toggle-divider" />
+
+      <label
+        className="phila-toggle-row"
+        title="Show the story feed, AI narration and the Solutions panel"
+      >
+        <input
+          type="checkbox"
+          checked={narrationOn}
+          onChange={(e) => setNarration(e.target.checked)}
+          aria-label="Toggle narration and stories"
+        />
+        <span>Narration and stories</span>
       </label>
     </div>
   );

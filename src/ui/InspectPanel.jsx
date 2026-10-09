@@ -104,7 +104,8 @@ function TractInspect({ tract }) {
   const narration        = useMapStore((s) => s.narration);
   const narrationLoading = useMapStore((s) => s.narrationLoading);
   const narrationError   = useMapStore((s) => s.narrationError);
-  const showNarration    = narration?.tractId === tract.id;
+  const narrationOn      = useMapStore((s) => s.philaNarration);
+  const showNarration    = narrationOn && narration?.tractId === tract.id;
 
   const vitality = {
     mobility: tract.mobilityScore,
@@ -133,8 +134,9 @@ function TractInspect({ tract }) {
 
       <CBSGauge cbs={tract.cbs} />
 
-      {/* AI narration — falls back to static InsightBlock if unavailable */}
-      {narrationLoading && (
+      {/* AI narration (only when the narration switch is on) — falls back to
+          static InsightBlock if off or unavailable */}
+      {narrationOn && narrationLoading && (
         <div className="phila-narration-block phila-narration-block--loading" aria-live="polite">
           <span className="phila-narration-spinner" aria-hidden="true" />
           Generating analysis…
@@ -146,7 +148,7 @@ function TractInspect({ tract }) {
           <p className="phila-narration-text">{narration.text}</p>
         </div>
       )}
-      {(narrationError || (!narrationLoading && !showNarration)) && (
+      {(!narrationOn || narrationError || (!narrationLoading && !showNarration)) && (
         <InsightBlock insight={buildTractInsightFromStore(tract)} />
       )}
 
@@ -250,6 +252,7 @@ function DockedInsight({ tract, onUnpin, onExpand }) {
   const narration        = useMapStore((s) => s.narration);
   const narrationLoading = useMapStore((s) => s.narrationLoading);
   const narrationError   = useMapStore((s) => s.narrationError);
+  const narrationOn      = useMapStore((s) => s.philaNarration);
   const cbsColor = tract.cbs >= 7 ? '#4caf50' : tract.cbs >= 4 ? '#ffa726' : '#ef5350';
   const badgeStyle = BADGE_STYLE[insight.badge.tone] ?? BADGE_STYLE.neutral;
 
@@ -279,17 +282,17 @@ function DockedInsight({ tract, onUnpin, onExpand }) {
         >✕</button>
       </div>
 
-      {narrationLoading && (
+      {narrationOn && narrationLoading && (
         <p className="phila-narration phila-narration--loading" aria-live="polite">
           Analyzing…
         </p>
       )}
-      {showNarration && !narrationLoading && (
+      {narrationOn && showNarration && !narrationLoading && (
         <p className="phila-narration" aria-live="polite">
           {narration.text}
         </p>
       )}
-      {narrationError && !narrationLoading && !showNarration && (
+      {narrationOn && narrationError && !narrationLoading && !showNarration && (
         <p className="phila-narration phila-narration--fallback" aria-live="polite">
           {insight.resident}
         </p>

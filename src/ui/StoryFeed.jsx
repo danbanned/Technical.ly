@@ -11,6 +11,9 @@
  *
  * Closed state  (!feedOpen):
  *   Floating "☰ Stories" button reopens the feed (also clears any selection).
+ *
+ * Renders nothing at all while the "Narration and stories" switch
+ * (philaNarration) is off — the default.
  */
 
 import * as Cesium from 'cesium';
@@ -75,8 +78,12 @@ export default function StoryFeed() {
   const activeInsight      = useMapStore((s) => s.activeInsight);
   const selectPhilaTract   = useMapStore((s) => s.selectPhilaTract);
   const clearActiveInsight = useMapStore((s) => s.clearActiveInsight);
+  const narrationOn        = useMapStore((s) => s.philaNarration);
 
-  const [feedOpen, setFeedOpen] = useState(true);
+  // Closed until the "Narration and stories" switch is turned on; opens each
+  // time the switch goes on, as the feed did on load before the switch existed.
+  const [feedOpen, setFeedOpen] = useState(false);
+  useEffect(() => { setFeedOpen(narrationOn); }, [narrationOn]);
 
   const articles = useMemo(() => seedArticlesFromTracts(tracts), [tracts]);
 
@@ -88,7 +95,8 @@ export default function StoryFeed() {
     return () => window.removeEventListener('keydown', handler);
   }, [activeInsight, clearActiveInsight]);
 
-  if (!articles.length) return null;
+  // Switch off: no feed, no scrim, no reopen button.
+  if (!narrationOn || !articles.length) return null;
 
   const browsing = !activeInsight;
 

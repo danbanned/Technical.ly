@@ -63,6 +63,7 @@ export default function Legend() {
   const enrichedOn     = useMapStore((s) => s.philaEnrichedBuildings);
   const filterColor    = useMapStore((s) => s.philaFilterColor);
   const legendExpanded = useMapStore((s) => s.philaLegendExpanded);
+  const narrationOn    = useMapStore((s) => s.philaNarration);
   const viewer         = useMapStore((s) => s.viewer);
   const setFilterColor    = useMapStore((s) => s.setPhilaFilterColor);
   const setLegendExpanded = useMapStore((s) => s.setPhilaLegendExpanded);
@@ -95,10 +96,13 @@ export default function Legend() {
     setFilterColor(filterColor === key ? null : key);
   }, [filterColor, setFilterColor]);
 
+  // Solutions panel is part of the narration feature — hidden while the switch is off.
+  const showSolutions = narrationOn && selectedTract;
+
   if (economicColor && enrichedOn) {
     return (
       <div className="phila-legend-stack">
-        {selectedTract && <SolutionConnector tract={selectedTract} forceCompact />}
+        {showSolutions && <SolutionConnector tract={selectedTract} forceCompact />}
 
         {/* Billboard — appears above the legend when hovering a color */}
         {hoveredItem && (
@@ -173,7 +177,7 @@ export default function Legend() {
 
   return (
     <div className="phila-legend-stack">
-      {selectedTract && <SolutionConnector tract={selectedTract} forceCompact />}
+      {showSolutions && <SolutionConnector tract={selectedTract} forceCompact />}
       <div className="phila-panel phila-legend-panel">
         <div className="phila-legend-dots">
           <div className="phila-legend-dot">

@@ -208,6 +208,11 @@ export const useMapStore = create((set, get) => ({
   }),
 
   // ── Narration (Phase 3) ──────────────────────────────────────────────────
+  // philaNarration is the user-facing switch for narration, the story feed and
+  // the Solutions panel. Off by default; VITE_ENABLE_NARRATION still gates the API.
+  philaNarration: false,
+  setPhilaNarration: (flag) => set({ philaNarration: flag }),
+
   // narration: { text: string, tractId: string } | null
   narration: null,
   narrationLoading: false,

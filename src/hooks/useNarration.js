@@ -15,14 +15,15 @@ import { narrateTract, NarrationUnavailableError } from '../core/narrateInsight'
 
 export function useNarration() {
   const activeInsight      = useMapStore((s) => s.activeInsight);
+  const narrationOn        = useMapStore((s) => s.philaNarration);
   const setNarration       = useMapStore((s) => s.setNarration);
   const setNarrationLoading = useMapStore((s) => s.setNarrationLoading);
   const setNarrationError  = useMapStore((s) => s.setNarrationError);
   const abortRef = useRef(null);
 
   useEffect(() => {
-    // Cleared insight — wipe state
-    if (!activeInsight) {
+    // Cleared insight or narration switched off — wipe state, make no request
+    if (!activeInsight || !narrationOn) {
       abortRef.current?.abort();
       setNarration(null);
       setNarrationLoading(false);
@@ -61,7 +62,7 @@ export function useNarration() {
       });
 
     return () => controller.abort();
-  // Re-run only when the tract ID changes — not on every re-render
+  // Re-run only when the tract ID or the narration switch changes — not on every re-render
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeInsight?.id]);
+  }, [activeInsight?.id, narrationOn]);
 }
