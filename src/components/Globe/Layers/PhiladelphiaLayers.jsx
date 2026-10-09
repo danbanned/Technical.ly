@@ -50,8 +50,22 @@ function specToEntity(viewer, spec) {
         showBackground: true,
         backgroundColor: new Cesium.Color(0, 0, 0, 0.6),
         backgroundPadding: new Cesium.Cartesian2(8, 5),
-        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 20000),
+        // Shown from street level out past the opening view; drawn over 3D tiles;
+        // full size up close, shrinking with distance so the skyline isn't buried.
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 25000),
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        scaleByDistance: new Cesium.NearFarScalar(1000, 1.0, 12000, 0.85),
+      },
+      // Thin leader line from the building up to its label.
+      polyline: spec.leaderFromM === undefined ? undefined : {
+        positions: [
+          Cesium.Cartesian3.fromDegrees(spec.lon, spec.lat, spec.leaderFromM),
+          Cesium.Cartesian3.fromDegrees(spec.lon, spec.lat, spec.altitudeM),
+        ],
+        width: 1,
+        material: Cesium.Color.WHITE.withAlpha(0.55),
+        arcType: Cesium.ArcType.NONE,
+        distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 25000),
       },
       properties: new Cesium.PropertyBag({
         philaType: spec.philaType,
