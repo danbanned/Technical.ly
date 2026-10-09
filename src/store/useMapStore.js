@@ -156,13 +156,13 @@ export const useMapStore = create((set, get) => ({
     }),
 
   // ─────────────── Philadelphia Pilot ─────────────────────────
-  philaLayerVisibility: { innovation: true, investment: true, mobility: true, labels: false },
+  philaLayerVisibility: { innovation: true, investment: true, mobility: true, labels: true },
   philaCBSafeMode: false,
-  philaOSMBuildings: false,
+  philaOSMBuildings: true,
   philaOSMHeightScale: 2,
-  philaGoogleTiles: false,
-  philaEnrichedBuildings: false,
-  philaEconomicColor: false,
+  philaGoogleTiles: true,
+  philaEnrichedBuildings: true,
+  philaEconomicColor: true,
   philaHeightDebug: false,
   philaFilterColor: null,
   philaLegendExpanded: false,
@@ -179,21 +179,16 @@ export const useMapStore = create((set, get) => ({
 
   setPhilaCBSafeMode: (flag) => set({ philaCBSafeMode: flag }),
 
-  // OSM + Enriched can be stacked. Google 3D Tiles is the heavy one (its own
-  // imagery + mesh), so it stays exclusive to avoid exhausting GPU memory.
-  setPhilaOSMBuildings: (flag) => set(flag
-    ? { philaOSMBuildings: true, philaGoogleTiles: false }
-    : { philaOSMBuildings: false }),
+  // All building layers (OSM, Enriched, Google 3D Tiles) can be on together.
+  // GPU memory is bounded by the cacheBytes / maximumScreenSpaceError settings
+  // in PhilaCesiumMap.jsx.
+  setPhilaOSMBuildings: (flag) => set({ philaOSMBuildings: flag }),
 
   setPhilaOSMHeightScale: (scale) => set({ philaOSMHeightScale: scale }),
 
-  setPhilaGoogleTiles: (flag) => set(flag
-    ? { philaGoogleTiles: true, philaOSMBuildings: false, philaEnrichedBuildings: false }
-    : { philaGoogleTiles: false }),
+  setPhilaGoogleTiles: (flag) => set({ philaGoogleTiles: flag }),
 
-  setPhilaEnrichedBuildings: (flag) => set(flag
-    ? { philaEnrichedBuildings: true, philaGoogleTiles: false }
-    : { philaEnrichedBuildings: false }),
+  setPhilaEnrichedBuildings: (flag) => set({ philaEnrichedBuildings: flag }),
 
   setPhilaEconomicColor: (flag) => set({ philaEconomicColor: flag }),
 

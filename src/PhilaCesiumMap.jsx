@@ -310,34 +310,41 @@ export default function PhilaCesiumMap() {
   }, [setViewer]);
 
   // ── OSM 3D Buildings ─────────────────────────────────────────────────────
+  // Each tileset effect loads when its flag is on (including at mount) and its
+  // cleanup removes the tileset, so a toggle-off during an async load can't leave
+  // an orphaned tileset holding GPU memory.
   useEffect(() => {
-    if (!ready || !HAS_ION_TOKEN) return;
+    if (!ready || !HAS_ION_TOKEN || !philaOSMBuildings) return;
     const viewer = viewerRef.current;
     if (!viewer || viewer.isDestroyed()) return;
+    let cancelled = false;
 
-    if (philaOSMBuildings) {
-      Cesium.createOsmBuildingsAsync()
-        .then((tileset) => {
-          if (!viewerRef.current || viewerRef.current.isDestroyed()) {
-            tileset.destroy();
-            return;
-          }
-          tileset.maximumScreenSpaceError = 16; // was 2: very high detail, heavy on GPU
-          logTilesetFailures(tileset, 'OSM Buildings (ion)');
-          viewerRef.current.scene.primitives.add(tileset);
-          osmTilesetRef.current = tileset;
-        })
-        .catch((err) => console.warn('[OSM Buildings]', err.message));
-    } else {
-      if (osmTilesetRef.current && !viewer.isDestroyed()) {
-        viewer.scene.primitives.remove(osmTilesetRef.current);
-        osmTilesetRef.current = null;
-      }
-      if (!viewer.isDestroyed()) {
-        viewer.scene.verticalExaggeration = 1.0;
-        viewer.scene.verticalExaggerationRelativeHeight = 0.0;
-      }
-    }
+    Cesium.createOsmBuildingsAsync()
+      .then((tileset) => {
+        if (cancelled || viewer.isDestroyed()) {
+          tileset.destroy();
+          return;
+        }
+        // was 2 (very high detail), then 16; 24 suits the high opening view
+        tileset.maximumScreenSpaceError = 24;
+        // OSM shares footprints with Enriched and sits inside the Google mesh.
+        // Opaque white boxes hid both, so draw OSM as a light translucent massing.
+        tileset.style = new Cesium.Cesium3DTileStyle({ color: 'color("#ffffff", 0.35)' });
+        logTilesetFailures(tileset, 'OSM Buildings (ion)');
+        viewer.scene.primitives.add(tileset);
+        osmTilesetRef.current = tileset;
+      })
+      .catch((err) => console.warn('[OSM Buildings]', err.message));
+
+    return () => {
+      cancelled = true;
+      const tileset = osmTilesetRef.current;
+      osmTilesetRef.current = null;
+      if (viewer.isDestroyed()) return;
+      if (tileset) viewer.scene.primitives.remove(tileset);
+      viewer.scene.verticalExaggeration = 1.0;
+      viewer.scene.verticalExaggerationRelativeHeight = 0.0;
+    };
   }, [philaOSMBuildings, ready]);
 
 
@@ -352,73 +359,78 @@ export default function PhilaCesiumMap() {
 
   // ── Google Photorealistic 3D Tiles ───────────────────────────────────────
   useEffect(() => {
-    if (!ready || !HAS_GOOGLE_KEY) return;
+    if (!ready || !HAS_GOOGLE_KEY || !philaGoogleTiles) return;
     const viewer = viewerRef.current;
     if (!viewer || viewer.isDestroyed()) return;
+    let cancelled = false;
 
-    if (philaGoogleTiles) {
-      // Explicit key → requests go straight to tile.googleapis.com.
-      // (With no key, Cesium falls back to ion asset 2275207 via ion's proxy.)
-      console.info('[TileDebug] Google 3D Tiles init — key loaded:', maskKey(GOOGLE_API_KEY));
-      Cesium.createGooglePhotorealistic3DTileset(
-        { key: GOOGLE_API_KEY, onlyUsingWithGoogleGeocoder: true },
-        {
-          maximumScreenSpaceError: 16,
-          // Cesium's Google default cache is 1.5 GB + 1 GB overflow — too much for laptop GPUs.
-          cacheBytes: 256 * 1024 * 1024,
-          maximumCacheOverflowBytes: 128 * 1024 * 1024,
-        }
-      ).then((tileset) => {
-        if (!viewerRef.current || viewerRef.current.isDestroyed()) {
+    // Explicit key → requests go straight to tile.googleapis.com.
+    // (With no key, Cesium falls back to ion asset 2275207 via ion's proxy.)
+    console.info('[TileDebug] Google 3D Tiles init — key loaded:', maskKey(GOOGLE_API_KEY));
+    Cesium.createGooglePhotorealistic3DTileset(
+      { key: GOOGLE_API_KEY, onlyUsingWithGoogleGeocoder: true },
+      {
+        // was 16; 24 loads fewer tiles from the high opening view
+        maximumScreenSpaceError: 24,
+        // Cesium's Google default cache is 1.5 GB + 1 GB overflow — too much for laptop GPUs.
+        cacheBytes: 256 * 1024 * 1024,
+        maximumCacheOverflowBytes: 128 * 1024 * 1024,
+      }
+    ).then((tileset) => {
+      if (cancelled || viewer.isDestroyed()) {
+        tileset.destroy();
+        return;
+      }
+      // Google tiles include their own imagery — hide CartoDB to avoid z-fighting
+      if (cartoLayerRef.current) cartoLayerRef.current.show = false;
+      logTilesetFailures(tileset, 'Google 3D Tiles');
+      viewer.scene.primitives.add(tileset);
+      googleTilesetRef.current = tileset;
+    }).catch((err) => console.warn('[Google 3D Tiles] init failed:', err?.message ?? err));
+
+    return () => {
+      cancelled = true;
+      const tileset = googleTilesetRef.current;
+      googleTilesetRef.current = null;
+      if (viewer.isDestroyed()) return;
+      if (tileset) viewer.scene.primitives.remove(tileset);
+      // Restore CartoDB basemap
+      if (cartoLayerRef.current) cartoLayerRef.current.show = true;
+    };
+  }, [philaGoogleTiles, ready]);
+
+  // ── Enriched Philadelphia Buildings (ion asset 4980304) ─────────────────────
+
+  useEffect(() => {
+    if (!ready || !HAS_ION_TOKEN || !philaEnrichedBuildings) return;
+    const viewer = viewerRef.current;
+    if (!viewer || viewer.isDestroyed()) return;
+    let cancelled = false;
+
+    Cesium.Cesium3DTileset.fromIonAssetId(4980304)
+      .then((tileset) => {
+        if (cancelled || viewer.isDestroyed()) {
           tileset.destroy();
           return;
         }
-        // Google tiles include their own imagery — hide CartoDB to avoid z-fighting
-        if (cartoLayerRef.current) cartoLayerRef.current.show = false;
-        logTilesetFailures(tileset, 'Google 3D Tiles');
-        viewerRef.current.scene.primitives.add(tileset);
-        googleTilesetRef.current = tileset;
-      }).catch((err) => console.warn('[Google 3D Tiles] init failed:', err?.message ?? err));
-    } else {
-      if (googleTilesetRef.current && !viewer.isDestroyed()) {
-        viewer.scene.primitives.remove(googleTilesetRef.current);
-        googleTilesetRef.current = null;
-      }
-      // Restore CartoDB basemap
-      if (cartoLayerRef.current && !viewer.isDestroyed()) {
-        cartoLayerRef.current.show = true;
-      }
-    }
-  }, [philaGoogleTiles, ready]);
+        // was 8; 16 loads fewer tiles from the high opening view
+        tileset.maximumScreenSpaceError = 16;
+        // Read the latest style flags — they may have changed while loading.
+        const s = useMapStore.getState();
+        tileset.style = pickEnrichedStyle(s.philaEconomicColor, s.philaHeightDebug, s.philaFilterColor);
+        attachPropertyInspector(tileset);
+        logTilesetFailures(tileset, 'Enriched Buildings (ion 4980304)');
+        viewer.scene.primitives.add(tileset);
+        enrichedTilesetRef.current = tileset;
+      })
+      .catch((err) => console.warn('[Enriched Buildings]', err.message));
 
-  // ── Enriched Philadelphia Buildings (ion asset 4979179) ─────────────────────
-
-  useEffect(() => {
-    if (!ready || !HAS_ION_TOKEN) return;
-    const viewer = viewerRef.current;
-    if (!viewer || viewer.isDestroyed()) return;
-
-    if (philaEnrichedBuildings) {
-      Cesium.Cesium3DTileset.fromIonAssetId(4980304)
-        .then((tileset) => {
-          if (!viewerRef.current || viewerRef.current.isDestroyed()) {
-            tileset.destroy();
-            return;
-          }
-          tileset.maximumScreenSpaceError = 8;
-          tileset.style = pickEnrichedStyle(philaEconomicColor, philaHeightDebug, philaFilterColor);
-          attachPropertyInspector(tileset);
-          logTilesetFailures(tileset, 'Enriched Buildings (ion 4980304)');
-          viewerRef.current.scene.primitives.add(tileset);
-          enrichedTilesetRef.current = tileset;
-        })
-        .catch((err) => console.warn('[Enriched Buildings]', err.message));
-    } else {
-      if (enrichedTilesetRef.current && !viewer.isDestroyed()) {
-        viewer.scene.primitives.remove(enrichedTilesetRef.current);
-        enrichedTilesetRef.current = null;
-      }
-    }
+    return () => {
+      cancelled = true;
+      const tileset = enrichedTilesetRef.current;
+      enrichedTilesetRef.current = null;
+      if (tileset && !viewer.isDestroyed()) viewer.scene.primitives.remove(tileset);
+    };
   }, [philaEnrichedBuildings, ready]);
 
   // Live-swap style when economic color / height-debug / filter changes
