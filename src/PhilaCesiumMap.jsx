@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as Cesium from 'cesium';
 import { useMapStore } from './store/useMapStore';
 import { isPhilaEntity, resolvePick } from './map/interactions';
+import { SCENE } from './data/config';
 
 const HAS_ION_TOKEN    = !!import.meta.env.VITE_CESIUM_ION_TOKEN;
 const GOOGLE_API_KEY   = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -159,7 +160,7 @@ function attachPropertyInspector(tileset) {
 /**
  * Standalone Cesium viewer for the Philadelphia pilot.
  * Free CartoDB Voyager basemap — no Ion token required.
- * Camera defaults to University City at 800 m, −30° pitch.
+ * Camera opens looking down at City Hall (SCENE.CAMERA in data/config.js).
  */
 export default function PhilaCesiumMap() {
   const containerRef    = useRef(null);
@@ -254,10 +255,15 @@ export default function PhilaCesiumMap() {
     viewer.scene.screenSpaceCameraController.minimumZoomDistance = 150;
     viewer.scene.screenSpaceCameraController.maximumZoomDistance = 40000;
 
-    viewer.camera.setView({
-      destination: Cesium.Cartesian3.fromDegrees(-75.190, 39.953, 800),
-      orientation: { heading: 0, pitch: Cesium.Math.toRadians(-30), roll: 0 },
-    });
+    // Look at the SCENE.CAMERA target, then release the lookAt transform so the
+    // user can orbit and zoom freely.
+    const { lon, lat, range, heading, pitch } = SCENE.CAMERA;
+    viewer.camera.lookAt(
+      Cesium.Cartesian3.fromDegrees(lon, lat),
+      new Cesium.HeadingPitchRange(
+        Cesium.Math.toRadians(heading), Cesium.Math.toRadians(pitch), range),
+    );
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction((click) => {

@@ -2,19 +2,15 @@ import * as Cesium from 'cesium';
 import { SCENE } from '../data/config.js';
 
 export function flyToPhiladelphia(viewer) {
-  viewer.camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(
-      SCENE.CAMERA.lon,
-      SCENE.CAMERA.lat,
-      SCENE.CAMERA.height
-    ),
-    orientation: {
-      heading: 0,
-      pitch: Cesium.Math.toRadians(SCENE.CAMERA.pitch),
-      roll: 0,
-    },
-    duration: 2,
-  });
+  const { lon, lat, range, heading, pitch } = SCENE.CAMERA;
+  viewer.camera.flyToBoundingSphere(
+    new Cesium.BoundingSphere(Cesium.Cartesian3.fromDegrees(lon, lat), 0),
+    {
+      offset: new Cesium.HeadingPitchRange(
+        Cesium.Math.toRadians(heading), Cesium.Math.toRadians(pitch), range),
+      duration: 2,
+    }
+  );
 }
 
 export function applyDarkScene(viewer) {

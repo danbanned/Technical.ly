@@ -65,11 +65,15 @@ export const PALETTES = {
   },
 };
 
+// Opening view: the camera looks at (lon, lat) — City Hall — from `range` metres
+// away. heading/pitch are degrees. Used with camera.lookAt, so the target sits at
+// screen centre.
 export const SCENE = {
   CAMERA: {
-    lon: -75.1950,
-    lat: 39.9520,
-    height: 8000,
-    pitch: -45,
+    lon: -75.1636,
+    lat: 39.9526,
+    range: 7500,
+    heading: 0,
+    pitch: -65,
   },
 };
