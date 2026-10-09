@@ -56,6 +56,10 @@ const ECONOMIC_LEGEND = [
   },
 ];
 
+const SAMPLE_NOTE = (
+  <div className="phila-legend-sample-note">Economic color and values shown are sample data.</div>
+);
+
 export default function Legend() {
   const cbSafe         = useMapStore((s) => s.philaCBSafeMode);
   const selectedTract  = useMapStore((s) => s.philaSelectedTract);
@@ -170,6 +174,7 @@ export default function Legend() {
               );
             })}
           </div>
+          {SAMPLE_NOTE}
         </div>
       </div>
     );
@@ -208,6 +213,8 @@ export default function Legend() {
             <span>Low</span>
           </div>
         </div>
+        <div className="phila-legend-sep" />
+        {SAMPLE_NOTE}
       </div>
     </div>
   );
