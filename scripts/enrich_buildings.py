@@ -21,7 +21,14 @@ Usage:
     python enrich_buildings.py --ion-token YOUR_TOKEN --ion-name "Phila Buildings"
 
     # Skip the slow OSM download and reuse a cached file
-    python enrich_buildings.py --buildings-cache buildings_raw.gpkg
+    python enrich_buildings.py --buildings-cache ../cache/buildings_raw.gpkg
+
+Files:
+    The buildings cache (buildings_raw.gpkg) and the output (enriched_buildings.geojson)
+    default to <repo>/cache/, which is gitignored. Keep them out of public/: Vite copies
+    everything in public/ into dist/. A manual Geofabrik .osm.pbf download also goes in cache/.
+    --tracts defaults to philadelphia_tracts.geojson in the current directory; that file is
+    no longer in the repo, so pass --tracts explicitly.
 """
 
 import argparse
@@ -39,8 +46,10 @@ from tqdm import tqdm
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 PLACE_QUERY   = "Philadelphia, Pennsylvania, USA"
-OUTPUT_PATH   = Path("enriched_buildings.geojson")
-CACHE_PATH    = Path("buildings_raw.gpkg")
+# Large local files live in the gitignored <repo>/cache/ (not public/, which Vite copies into dist/)
+CACHE_DIR     = Path(__file__).resolve().parent.parent / "cache"
+OUTPUT_PATH   = CACHE_DIR / "enriched_buildings.geojson"
+CACHE_PATH    = CACHE_DIR / "buildings_raw.gpkg"
 
 # OSM tags we want to pull through onto each building feature
 KEEP_OSM_TAGS = [
