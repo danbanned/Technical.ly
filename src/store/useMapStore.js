@@ -160,7 +160,7 @@ export const useMapStore = create((set, get) => ({
   philaCBSafeMode: false,
   philaOSMBuildings: true,
   philaOSMHeightScale: 2,
-  philaGoogleTiles: true,
+  philaGoogleTiles: false,
   philaEnrichedBuildings: true,
   philaEconomicColor: true,
   philaHeightDebug: false,

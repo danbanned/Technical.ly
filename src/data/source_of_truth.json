@@ -1,0 +1,437 @@
+{
+  "registryVersion": "0.1.1",
+  "updated": "2026-10-23",
+  "owner": "Technical.ly map team",
+  "statusValues": {
+    "live": "Real data from a registered source, passed all checks. May render.",
+    "pipeline_ready": "Script exists and pulls real data, but fixes in the spec are still open. Must not render until promoted to live.",
+    "placeholder": "Sample values. May render ONLY with the 'Sample data' badge, and never in a client demo without saying so.",
+    "not_sourced": "No approved source. Must not render.",
+    "retired": "Removed by team decision. Must not render. Code that computes it should be deleted."
+  },
+  "rules": [
+    {
+      "id": "R1",
+      "name": "registered",
+      "rule": "Every value the app renders must carry a metricId that exists in `metrics` below. Unknown metricIds are rejected."
+    },
+    {
+      "id": "R2",
+      "name": "status",
+      "rule": "Render only if status is 'live', or 'placeholder' with the sample badge shown. 'pipeline_ready', 'not_sourced' and 'retired' are rejected."
+    },
+    {
+      "id": "R3",
+      "name": "unit_and_range",
+      "rule": "Value must be a finite number in the metric's `unit` and inside `validRange`. Out of range is rejected, not clamped."
+    },
+    {
+      "id": "R4",
+      "name": "missing_is_missing",
+      "rule": "null, NaN and any value in the source's `missingSentinels` become null and render as 'No data'. Filling, guessing, defaults and substitute metrics are prohibited."
+    },
+    {
+      "id": "R5",
+      "name": "geography",
+      "rule": "The record's geography level and boundary vintage must match the metric's `geography`. Tract data on 2010 boundaries must be crosswalked to 2020 before it can be joined to 2020 shapes."
+    },
+    {
+      "id": "R6",
+      "name": "no_unregistered_derivations",
+      "rule": "No value may be computed from two or more metrics. Single-metric transforms (e.g. ratio of two fields from the same table) must be listed in the metric's `transform`."
+    },
+    {
+      "id": "R7",
+      "name": "provenance_shown",
+      "rule": "Wherever a value is shown, its source label and vintage are shown with it (legend, panel, or tooltip)."
+    },
+    {
+      "id": "R8",
+      "name": "one_metric_per_layer",
+      "rule": "Each map layer encodes exactly one metricId. Tract choropleth layers are mutually exclusive."
+    }
+  ],
+  "sources": {
+    "census_acs_2022_5yr": {
+      "label": "U.S. Census Bureau, American Community Survey 5-year estimates",
+      "publisher": "U.S. Census Bureau",
+      "vintage": "2018–2022 (ACS 2022 5-year)",
+      "releaseDate": "2023-12-07",
+      "access": "api.census.gov/data/2022/acs/acs5 (free API key)",
+      "url": "https://data.census.gov/all?q=Income",
+      "license": "Public domain (U.S. government work)",
+      "missingSentinels": [
+        -666666666,
+        -999999999,
+        -888888888,
+        -555555555,
+        -333333333,
+        -222222222
+      ],
+      "refresh": "Annually when the next 5-year release is out (usually December)",
+      "pulledBy": "scripts/fetch_phila_tracts.py"
+    },
+    "opportunity_atlas_2018": {
+      "label": "Opportunity Atlas (Opportunity Insights & U.S. Census Bureau)",
+      "publisher": "Opportunity Insights",
+      "vintage": "Children born 1978–1983; adult outcomes measured 2014–2015; released 2018",
+      "releaseDate": "2018-10-01",
+      "access": "Manual download: tract_outcomes.zip → tract_outcomes_simple.csv",
+      "url": "https://www.opportunityatlas.org/",
+      "license": "Free for public use with citation; confirm terms before publishing",
+      "missingSentinels": [],
+      "refresh": "None scheduled — static release",
+      "pulledBy": "scripts/fetch_phila_tracts.py (move to scripts/fetch_atlas.py)"
+    },
+    "census_tiger_2022": {
+      "label": "U.S. Census Bureau TIGER/Line tract boundaries",
+      "publisher": "U.S. Census Bureau",
+      "vintage": "2022 (2020 census tract definitions)",
+      "access": "www2.census.gov/geo/tiger/TIGER2022/TRACT/tl_2022_42_tract.zip, filtered to COUNTYFP 101",
+      "url": "https://www2.census.gov/geo/tiger/TIGER2022/TRACT/",
+      "license": "Public domain (U.S. government work)",
+      "missingSentinels": [],
+      "refresh": "Only when tract definitions change (next: 2030 census)",
+      "pulledBy": "scripts/fetch_phila_tracts.py"
+    },
+    "nsf_herd": {
+      "label": "NSF NCSES Higher Education Research and Development (HERD) Survey",
+      "publisher": "National Science Foundation, NCSES",
+      "vintage": "TBD — choose one fiscal year",
+      "access": "NCSES data tables / profiles",
+      "url": "https://ncsesdata.nsf.gov/profiles/site?method=rankingbysource&ds=herd",
+      "license": "Public domain (U.S. government work)",
+      "missingSentinels": [],
+      "refresh": "Annually",
+      "pulledBy": null
+    },
+    "venture_monitor": {
+      "label": "PitchBook-NVCA Venture Monitor (as reported by Technical.ly)",
+      "publisher": "PitchBook / NVCA; reported by Technical.ly",
+      "vintage": "TBD — quarter",
+      "access": "Via Technical.ly, with permission",
+      "url": "https://technical.ly/venture-monitor-snapshots/",
+      "license": "Proprietary — written permission from Technical.ly required before use",
+      "missingSentinels": [],
+      "refresh": "Quarterly",
+      "pulledBy": null
+    },
+    "osm": {
+      "label": "OpenStreetMap contributors",
+      "publisher": "OpenStreetMap Foundation",
+      "vintage": "Live / Cesium ion snapshot",
+      "url": "https://www.openstreetmap.org/copyright",
+      "license": "ODbL — attribution required",
+      "missingSentinels": [],
+      "refresh": "n/a",
+      "pulledBy": "Cesium ion asset 96188"
+    },
+    "nih_reporter": {
+      "label": "NIH RePORTER (candidate source for hospital research funding)",
+      "publisher": "National Institutes of Health",
+      "vintage": "TBD",
+      "url": "https://reporter.nih.gov/",
+      "license": "Public domain (U.S. government work)",
+      "missingSentinels": [],
+      "refresh": "TBD",
+      "pulledBy": null,
+      "candidate": true
+    }
+  },
+  "metrics": {
+    "tract_boundary": {
+      "label": "Census tract",
+      "plainLanguage": "The official outline of a census tract — the neighborhood-sized area every tract layer is drawn on.",
+      "sourceId": "census_tiger_2022",
+      "sourceField": "geometry, GEOID",
+      "transform": "Filter STATEFP=42, COUNTYFP=101",
+      "unit": "polygon",
+      "validRange": null,
+      "expectedCount": 408,
+      "geography": {
+        "level": "tract",
+        "boundaryVintage": 2020,
+        "idField": "GEOID"
+      },
+      "status": "pipeline_ready",
+      "layer": "base geometry for tract layers",
+      "caveats": [
+        "Tracts are statistical areas, not neighborhoods; names like 'Kensington' need a separate sourced lookup."
+      ]
+    },
+    "median_household_income": {
+      "label": "Median household income",
+      "plainLanguage": "The yearly income of the middle household in the tract, in dollars.",
+      "sourceId": "census_acs_2022_5yr",
+      "sourceField": "B19013_001E",
+      "moeField": "B19013_001M",
+      "transform": "None. Sentinels → null.",
+      "unit": "USD (2022 inflation-adjusted)",
+      "validRange": [
+        2500,
+        250001
+      ],
+      "geography": {
+        "level": "tract",
+        "boundaryVintage": 2020,
+        "idField": "GEOID"
+      },
+      "status": "pipeline_ready",
+      "blockers": [
+        "Remove clip(lower=0) and fillna(45000) in fetch_phila_tracts.py",
+        "Pull MOE field"
+      ],
+      "layer": "Median household income (tract choropleth)",
+      "encoding": "Sequential color, 5 quantile classes; gray hatch = No data",
+      "caveats": [
+        "Estimate with margin of error; show ±MOE in the tract panel.",
+        "ACS top-codes this value at $250,001."
+      ]
+    },
+    "unemployment_rate": {
+      "label": "Unemployment rate",
+      "plainLanguage": "Out of people in the tract who are working or looking for work, the share who are unemployed.",
+      "sourceId": "census_acs_2022_5yr",
+      "sourceField": "B23025_005E / B23025_003E",
+      "moeField": "B23025_005M, B23025_003M",
+      "transform": "unemployed ÷ civilian labor force × 100. Null if labor force is 0 or either field is a sentinel.",
+      "unit": "percent (0–100)",
+      "validRange": [
+        0,
+        100
+      ],
+      "geography": {
+        "level": "tract",
+        "boundaryVintage": 2020,
+        "idField": "GEOID"
+      },
+      "status": "pipeline_ready",
+      "blockers": [
+        "Remove fillna(8.0)",
+        "Store as percent everywhere (sample file uses a fraction)",
+        "Pull MOE fields"
+      ],
+      "layer": "Unemployment rate (tract choropleth)",
+      "encoding": "Sequential color, 5 quantile classes; gray hatch = No data",
+      "caveats": [
+        "People not looking for work are not counted.",
+        "Small tracts can have large margins of error."
+      ]
+    },
+    "upward_mobility_p25": {
+      "label": "Upward mobility (kids from low-income families)",
+      "plainLanguage": "For kids who grew up in this tract with low-income parents, where they ranked in household income as adults (0–100).",
+      "sourceId": "opportunity_atlas_2018",
+      "sourceField": "kfr_pooled_pooled_p25",
+      "transform": "× 100, round to 1 decimal. Crosswalk 2010 tract IDs to 2020 tracts first.",
+      "unit": "percentile rank (0–100)",
+      "validRange": [
+        0,
+        100
+      ],
+      "geography": {
+        "level": "tract",
+        "boundaryVintage": 2010,
+        "idField": "tract (state+county+tract FIPS)"
+      },
+      "requiresCrosswalk": {
+        "from": 2010,
+        "to": 2020,
+        "file": "Census 2020↔2010 tract relationship file"
+      },
+      "status": "pipeline_ready",
+      "blockers": [
+        "Remove income-as-mobility substitute and fillna(40.0)",
+        "Add 2010→2020 crosswalk",
+        "Rename code field mobilityScore → upward_mobility_p25"
+      ],
+      "layer": "Upward mobility (tract choropleth)",
+      "encoding": "Sequential color, 5 quantile classes; gray hatch = No data",
+      "caveats": [
+        "Describes a past generation (born 1978–83), not current residents.",
+        "Not a neighborhood 'score'."
+      ]
+    },
+    "university_rd_expenditure": {
+      "label": "University research spending",
+      "plainLanguage": "Total money a university spent on research in one fiscal year.",
+      "sourceId": "nsf_herd",
+      "sourceField": "Total R&D expenditures (all sources)",
+      "transform": "None. Placed at the institution's main campus coordinates.",
+      "unit": "USD",
+      "validRange": [
+        150000,
+        20000000000
+      ],
+      "geography": {
+        "level": "institution",
+        "boundaryVintage": null,
+        "idField": "HERD institution ID"
+      },
+      "status": "not_sourced",
+      "blockers": [
+        "Write scripts/fetch_herd.py",
+        "Choose fiscal year"
+      ],
+      "layer": "University research spending (3D towers)",
+      "encoding": "Tower height = sqrt(USD) × k; single blue color",
+      "caveats": [
+        "Institution-wide total, not tied to a building or campus.",
+        "Excludes most hospital research."
+      ]
+    },
+    "vc_deal_count": {
+      "label": "Venture capital deals",
+      "plainLanguage": "Number of venture capital deals in the Philadelphia metro area in a quarter.",
+      "sourceId": "venture_monitor",
+      "sourceField": "Deal count",
+      "transform": "None",
+      "unit": "count per quarter",
+      "validRange": [
+        0,
+        100000
+      ],
+      "geography": {
+        "level": "metro (MSA)",
+        "boundaryVintage": null,
+        "idField": "MSA name"
+      },
+      "status": "not_sourced",
+      "blockers": [
+        "Technical.ly permission",
+        "Deal-level locations needed before any in-city placement"
+      ],
+      "layer": "City panel only",
+      "encoding": "Number with source and quarter; no map geometry",
+      "caveats": [
+        "Private investment — never shown in the same visual form as research spending."
+      ]
+    },
+    "vc_capital_invested": {
+      "label": "Venture capital invested",
+      "plainLanguage": "Total venture capital dollars invested in the Philadelphia metro area in a quarter.",
+      "sourceId": "venture_monitor",
+      "sourceField": "Capital invested",
+      "transform": "None",
+      "unit": "USD per quarter",
+      "validRange": [
+        0,
+        1000000000000
+      ],
+      "geography": {
+        "level": "metro (MSA)",
+        "boundaryVintage": null,
+        "idField": "MSA name"
+      },
+      "status": "not_sourced",
+      "blockers": [
+        "Technical.ly permission"
+      ],
+      "layer": "City panel only",
+      "encoding": "Number with source and quarter; no map geometry",
+      "caveats": [
+        "A single large raise can dominate a quarter."
+      ]
+    },
+    "hospital_location": {
+      "label": "Hospital",
+      "plainLanguage": "Where a major hospital is. Location only — no values.",
+      "sourceId": "osm",
+      "sourceField": "amenity=hospital (name, coordinates)",
+      "transform": "None",
+      "unit": "point",
+      "validRange": null,
+      "geography": {
+        "level": "point",
+        "boundaryVintage": null,
+        "idField": "OSM id"
+      },
+      "status": "not_sourced",
+      "layer": "Hospitals (labeled pins)",
+      "encoding": "Pin + name; no size, height or color scale",
+      "caveats": [
+        "Research funding for hospitals is not yet sourced."
+      ],
+      "blockers": [
+        "No script pulls hospital locations yet; write one (OSM amenity=hospital) before promoting"
+      ]
+    },
+    "hospital_research_funding": {
+      "label": "Hospital research funding",
+      "plainLanguage": "Research grant dollars awarded to a hospital.",
+      "sourceId": "nih_reporter",
+      "sourceField": "TBD",
+      "unit": "USD",
+      "validRange": null,
+      "geography": {
+        "level": "institution",
+        "boundaryVintage": null,
+        "idField": "TBD"
+      },
+      "status": "not_sourced",
+      "blockers": [
+        "Confirm NIH RePORTER is appropriate and how awards map to hospitals"
+      ]
+    },
+    "patent_activity": {
+      "label": "Patents",
+      "status": "not_sourced",
+      "note": "Listed as a score input; no source. Out of MVP."
+    },
+    "startup_employment": {
+      "label": "Startup employment",
+      "status": "not_sourced",
+      "note": "Listed as a score input; no source. Out of MVP."
+    },
+    "housing_cost_burden": {
+      "label": "Housing cost burden",
+      "status": "not_sourced",
+      "note": "Candidate: ACS B25070. Out of MVP."
+    },
+    "state_dynamism": {
+      "label": "EIG State Dynamism",
+      "status": "retired",
+      "note": "State-level; only in dormant multi-city view."
+    },
+    "community_benefit_score": {
+      "label": "Community Benefit Score / Community Opportunity Indicator",
+      "status": "retired",
+      "note": "Composite of multiple datasets. Violates R6 and 9/29 guardrails."
+    },
+    "innovation_index": {
+      "label": "Innovation index",
+      "status": "retired",
+      "note": "Composite step of the score."
+    },
+    "outcome_index": {
+      "label": "Outcome index",
+      "status": "retired",
+      "note": "Composite step of the score."
+    },
+    "mismatch_alert": {
+      "label": "Mismatch / opportunity gap",
+      "status": "retired",
+      "note": "Conclusion drawn from composite."
+    },
+    "vitality_bars": {
+      "label": "Capital Growth / Dynamism / Innovation bars",
+      "status": "retired",
+      "note": "Mislabeled or invented metrics in InspectPanel.jsx."
+    },
+    "anchor_gap_marker": {
+      "label": "'GAP' markers",
+      "status": "retired",
+      "note": "Hand-placed editorial markers, not data."
+    },
+    "solution_recommendations": {
+      "label": "'Solutions' recommended actions",
+      "status": "retired",
+      "note": "Advice generated from the score in solutionConnector.js (rules, or the Anthropic API from the browser). Violates the 9/29 guardrails."
+    },
+    "story_feed_headlines": {
+      "label": "Story feed headlines",
+      "status": "retired",
+      "note": "Interpretive text from insightEngine categories; header falsely says 'real census tract data'."
+    }
+  }
+}
